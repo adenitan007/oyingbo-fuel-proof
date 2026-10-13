@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 
-export const config = { path: ["/api/deliveries", "/api/photo/:id", "/api/check"] };
+export const config = { path: ["/api/deliveries", "/api/photo/:id", "/api/check", "/api/ping"] };
 
 const ID_RE = /^FD-[A-Za-z0-9-]{6,60}$/;
 const MAX_PHOTO = 10 * 1024 * 1024;
@@ -17,6 +17,7 @@ export default async (req, context) => {
   const url = new URL(req.url);
   let pin = "";
   try { pin = (globalThis.Netlify?.env?.get("ACCESS_PIN") ?? process.env.ACCESS_PIN ?? "").trim(); } catch { pin = (process.env.ACCESS_PIN || "").trim(); }
+  if (url.pathname === "/api/ping") return json({ ok: true, server: "running", pinConfigured: Boolean(pin), pinLength: pin.length, time: new Date().toISOString() });
   if (!pin) return json({ error: "not_configured" }, 503);
   const given = (req.headers.get("x-pin") || url.searchParams.get("pin") || "").replace(/\s+/g, "");
   if (given !== pin) return json({ error: "bad_pin" }, 401);

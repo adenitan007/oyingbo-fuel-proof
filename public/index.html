@@ -238,7 +238,12 @@ function setStatus(ok,t){$("status").innerHTML=`Register: <b class="${ok?"":"off
 const api=(path,opt={})=>fetch(path,{...opt,headers:{...(opt.headers||{}),"x-pin":PIN}});
 
 /* ---------- sign-in gate ---------- */
-async function checkPin(pin){const r=await fetch("/api/check",{headers:{"x-pin":pin}});return r.status}
+async function checkPin(pin){
+  const ac=new AbortController();const t=setTimeout(()=>ac.abort(),15000);
+  try{const r=await fetch("/api/check?t="+Date.now(),{headers:{"x-pin":pin},cache:"no-store",signal:ac.signal});return r.status}
+  catch(e){return e.name==="AbortError"?"timeout":"network"}
+  finally{clearTimeout(t)}
+}
 $("gateForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const pin=$("gPin").value.replace(/\s+/g,""), name=$("gName").value.trim();
@@ -247,11 +252,13 @@ $("gateForm").addEventListener("submit",async e=>{
   $("gBtn").disabled=true;$("gMsg").textContent="Checking…";$("gMsg").className="msg";
   try{
     const st=await checkPin(pin);
+    if(st==="timeout"){$("gMsg").textContent="The server took too long to answer (over 15 s). Check your data connection and try again.";$("gMsg").className="msg err";return}
+    if(st==="network"){$("gMsg").textContent="Couldn't reach the server. Check your internet connection and try again.";$("gMsg").className="msg err";return}
     if(st===401){$("gMsg").textContent="That PIN is wrong. Ask the Maintenance Officer for the station PIN.";$("gMsg").className="msg err";return}
     if(st!==200){$("gMsg").textContent="The app's server isn't responding right now (code "+st+"). Try again in a minute.";$("gMsg").className="msg err";return}
     ls.set("fdp-pin",pin);const p=ls.get("fdp-prefs",{});p.receivedBy=name;ls.set("fdp-prefs",p);
     start();
-  }catch(err){$("gMsg").textContent="No connection. Connect to the internet for this first sign-in.";$("gMsg").className="msg err"}
+  }catch(err){$("gMsg").textContent="Unexpected error: "+(err&&err.message||err);$("gMsg").className="msg err"}
   finally{$("gBtn").disabled=false}
 });
 $("signOut").addEventListener("click",()=>{ls.del("fdp-pin");location.reload()});
