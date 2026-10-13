@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+[hidden]{display:none!important}
 
 /* Layout: phone-first single flow (photo → taps → one button), stamped proof beside it on wide screens, shared register below. */
 :root{
@@ -52,10 +53,10 @@ input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid 
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips label{position:relative;flex:1 1 auto}
 .chips input{position:absolute;opacity:0;pointer-events:none;width:1px}
-.chips span{display:block;text-align:center;padding:11px 10px;border:1px solid var(--line);border-radius:4px;font:700 18px/1 var(--display);letter-spacing:.03em;background:var(--bg);cursor:pointer;white-space:nowrap}
+.chips label>span{display:block;text-align:center;padding:11px 10px;border:1px solid var(--line);border-radius:4px;font:700 18px/1 var(--display);letter-spacing:.03em;background:var(--bg);cursor:pointer;white-space:nowrap}
 .chips input:checked+span{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
 .chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
-.chips .done{font:600 11px/1 var(--body);letter-spacing:.06em;display:block;margin-top:4px;color:var(--ok)}
+.chips .done{padding:0;border:0;background:none;min-height:1em;font:600 11px/1 var(--body);letter-spacing:.06em;display:block;margin-top:4px;color:var(--ok)}
 .chips input:checked+span .done{color:inherit;opacity:.8}
 .shot{border:2px dashed var(--accent);border-radius:6px;padding:20px 16px;text-align:center;cursor:pointer;display:grid;gap:4px;position:relative;background:var(--bg)}
 .shot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
@@ -257,7 +258,7 @@ $("gateForm").addEventListener("submit",async e=>{
     if(st===401){$("gMsg").textContent="That PIN is wrong. Ask the Maintenance Officer for the station PIN.";$("gMsg").className="msg err";return}
     if(st!==200){$("gMsg").textContent="The app's server isn't responding right now (code "+st+"). Try again in a minute.";$("gMsg").className="msg err";return}
     ls.set("fdp-pin",pin);const p=ls.get("fdp-prefs",{});p.receivedBy=name;ls.set("fdp-prefs",p);
-    start();
+    $("gMsg").textContent="";window.scrollTo(0,0);start();
   }catch(err){$("gMsg").textContent="Unexpected error: "+(err&&err.message||err);$("gMsg").className="msg err"}
   finally{$("gBtn").disabled=false}
 });
