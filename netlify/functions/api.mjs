@@ -24,7 +24,7 @@ export default async (req, context) => {
 
   if (url.pathname === "/api/check") return json({ ok: true });
 
-  const store = getStore({ name: "fuel-register-live", consistency: "strong" });
+  const store = getStore({ name: "fuel-register-2026", consistency: "strong" });
 
   // Photo
   if (url.pathname.startsWith("/api/photo/")) {

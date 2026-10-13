@@ -387,6 +387,7 @@ function ensureDay(){
 
 function resetPhoto(){$("photo").value="";photoFile=null;$("shotBox").classList.remove("has");$("shotHead").textContent="Take photo";$("shotTxt").textContent=mode==="decant"?"Opens the camera. Get both locomotives or the transfer meter in frame.":"Opens the camera. Get the loco number and the meter reading in frame."}
 $("photo").addEventListener("change",e=>{
+  delete $("f").dataset.oldOk;
   photoFile=e.target.files[0]||null;
   if(!photoFile)return resetPhoto();
   $("shotBox").classList.add("has");$("shotHead").textContent="Photo ready ✓";
@@ -466,6 +467,9 @@ $("f").addEventListener("submit",async e=>{
   }
   const litres=parseFloat(String(chipVal("litre","litres")).replace(/,/g,""));
   if(!(litres>0))return msg("Enter the litres as a number, e.g. "+(dec?"500":"3750")+".","err");
+  const ageH=(Date.now()-(photoFile.lastModified||Date.now()))/36e5;
+  if(ageH>2&&!$("f").dataset.oldOk){$("f").dataset.oldOk="1";return msg(`This photo was taken ${fmtDate(photoFile.lastModified)} ${fmtTime(photoFile.lastModified)}, not just now. It will be marked "Old photo" in the register. Tap Stamp & save again to continue, or retake the photo.`,"err")}
+  delete $("f").dataset.oldOk;
   busy=true;$("goBtn").disabled=true;msg("Stamping…");
   try{
     const captured=new Date(photoFile.lastModified||Date.now()),now=new Date(),l=lagos(captured);
@@ -559,7 +563,8 @@ function render(){
   $("rows").innerHTML=rows.length?rows.map(r=>{
     const src=r.queued?"":`/api/photo/${encodeURIComponent(r.id)}?pin=${encodeURIComponent(PIN)}`;
     const img=src?`<img src="${esc(src)}" alt="Photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
-    const q=r.queued?'<span class="tag q">Waiting to upload</span>':"";
+    const lagH=(new Date(r.stampedAt||r.capturedAt)-new Date(r.capturedAt))/36e5;
+    const q=(r.queued?'<span class="tag q">Waiting to upload</span>':"")+(lagH>2?`<span class="tag ex" title="Photo was taken ${fmtDate(r.capturedAt)}, stamped ${fmtDate(r.stampedAt)}">Old photo · ${lagH>=48?Math.round(lagH/24)+" days":Math.round(lagH)+" h"}</span>`:"");
     const type=isDec(r)?'<span class="type dec">Decant</span>':'<span class="type del">Delivery</span>';
     const loco=isDec(r)?`<span class="loco">${esc(r.fromLoco)} → ${esc(r.loco)}</span>`:`<span class="loco">${esc(r.loco)}</span>`;
     const sup=isDec(r)?`<span style="color:var(--muted)">${esc(r.notes||"—")}</span>`:`${esc(r.supplier)}<br><span style="color:var(--muted)">${esc(r.waybill||"—")}</span>`;

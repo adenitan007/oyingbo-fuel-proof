@@ -1,6 +1,6 @@
 // Offline support: app shell cached on first visit; register list falls back to last copy; photos cached once seen.
 const SHELL = "fuel-shell-v5";
-const DATA = "fuel-data-v2";
+const DATA = "fuel-data-v3";
 const SHELL_FILES = ["/", "/index.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (e) => {
