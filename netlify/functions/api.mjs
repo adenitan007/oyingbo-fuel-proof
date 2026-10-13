@@ -4,6 +4,8 @@ export const config = { path: ["/api/deliveries", "/api/photo/:id", "/api/check"
 
 const ID_RE = /^FD-[A-Za-z0-9-]{6,60}$/;
 const MAX_PHOTO = 10 * 1024 * 1024;
+// Official start of the live register. Entries stamped before this (tests, stuck uploads) are discarded.
+const REGISTER_START = "2026-10-13T19:05:00Z";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -24,7 +26,7 @@ export default async (req, context) => {
 
   if (url.pathname === "/api/check") return json({ ok: true });
 
-  const store = getStore({ name: "fuel-register-2026", consistency: "strong" });
+  const store = getStore({ name: "fuel-register-oyingbo", consistency: "strong" });
 
   // Photo
   if (url.pathname.startsWith("/api/photo/")) {
@@ -41,7 +43,7 @@ export default async (req, context) => {
   if (req.method === "GET") {
     const { blobs } = await store.list({ prefix: "rec/" });
     const recs = await Promise.all(blobs.map((b) => store.get(b.key, { type: "json" })));
-    return json(recs.filter(Boolean));
+    return json(recs.filter((r) => r && String(r.stampedAt || "") >= REGISTER_START));
   }
 
   // Save a delivery (write-once: records and photos can never be overwritten or deleted)
@@ -55,6 +57,7 @@ export default async (req, context) => {
     if (!ID_RE.test(id)) return json({ error: "bad_id" }, 400);
     if (!photo || typeof photo.arrayBuffer !== "function") return json({ error: "no_photo" }, 400);
     if (photo.size > MAX_PHOTO) return json({ error: "photo_too_large" }, 413);
+    if (!(String(meta.stampedAt || "") >= REGISTER_START)) return json({ ok: true, discarded: "before_register_start" });
     const litres = Number(meta.litres);
     if (!(litres > 0 && litres < 100000)) return json({ error: "bad_litres" }, 400);
 
