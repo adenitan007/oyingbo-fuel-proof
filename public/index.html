@@ -109,6 +109,25 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 .gate p{margin:0;color:var(--muted)}
 .tip{font-size:14px;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:6px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .who{font-size:13px;color:var(--muted)}
+
+.day{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:12px 14px;display:grid;gap:10px}
+.dayhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.daysum{font-size:14px;color:var(--ink);line-height:1.45;min-width:0}
+.daysum b{font-weight:600}
+.daysum .muted{color:var(--muted)}
+.day .row{margin-top:2px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.modes button{font-size:18px;padding:12px}
+.modes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.decant-flow{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.lbl .hint{text-transform:none;letter-spacing:0;font-weight:500}
+.sumtable{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+.sumtable th,.sumtable td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.sumtable td{font-variant-numeric:tabular-nums}
+.sumtable tr.total td{font-weight:600;border-top:2px solid var(--line)}
+.type{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;border-radius:3px;padding:3px 6px;white-space:nowrap}
+.type.del{background:var(--rail);color:var(--rail-ink)}
+.type.dec{background:var(--accent);color:var(--accent-ink)}
 </style>
 </head>
 <body>
@@ -142,52 +161,86 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
   </div>
 
   <div class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" id="tabLog">Log delivery</button>
+    <button role="tab" aria-selected="true" id="tabLog">Log</button>
     <button role="tab" aria-selected="false" id="tabReg">Register</button>
   </div>
 
   <section class="bench" id="logView">
     <div class="card">
+      <!-- Day details: set once per day -->
+      <div class="day" id="dayBox">
+        <div class="dayhead">
+          <span class="lbl" id="dayTitle">Today's details</span>
+          <button type="button" class="link" id="dayToggle">Edit</button>
+        </div>
+        <div class="daysum" id="daySum"></div>
+        <div id="dayForm" hidden>
+          <div class="field">
+            <span class="lbl">Supplier</span>
+            <div class="chips" id="suppliers" role="radiogroup" aria-label="Supplier"></div>
+            <input id="supplierOther" placeholder="Supplier name" hidden>
+          </div>
+          <div class="row">
+            <label class="field"><span class="lbl">Waybill no.</span><input id="waybill" placeholder="e.g. HE-0912"></label>
+            <label class="field"><span class="lbl">Received by</span><input id="receivedBy" placeholder="Your name"></label>
+          </div>
+          <div class="row">
+            <label class="field"><span class="lbl">Witnessed by (audit)</span><input id="witness" placeholder="Auditor's name"></label>
+            <label class="field"><span class="lbl">Remarks</span><input id="notes" placeholder="Optional"></label>
+          </div>
+          <div class="btns"><button type="button" id="daySave">Use these for today</button></div>
+        </div>
+      </div>
+
+      <div class="modes" role="group" aria-label="Entry type">
+        <button type="button" id="modeDel" aria-pressed="true">Delivery</button>
+        <button type="button" id="modeDec" aria-pressed="false">Decant</button>
+      </div>
+
       <form id="f" novalidate>
         <label class="shot" id="shotBox">
           <input type="file" id="photo" accept="image/*" capture="environment">
           <strong id="shotHead">Take photo</strong>
           <small id="shotTxt">Opens the camera. Get the loco number and the meter reading in frame.</small>
         </label>
-        <div class="field">
-          <span class="lbl">Locomotive</span>
-          <div class="chips" id="locos" role="radiogroup" aria-label="Locomotive"></div>
-          <input id="locoOther" placeholder="Locomotive number" hidden>
+
+        <div id="delFields">
+          <div class="field">
+            <span class="lbl">Locomotive</span>
+            <div class="chips" id="locos" role="radiogroup" aria-label="Locomotive"></div>
+            <input id="locoOther" placeholder="Locomotive number" hidden>
+          </div>
         </div>
+
+        <div id="decFields" class="decant-flow" hidden>
+          <div class="field">
+            <span class="lbl">From locomotive <span class="hint">(gives fuel)</span></span>
+            <div class="chips" id="fromLocos" role="radiogroup" aria-label="From locomotive"></div>
+            <input id="fromOther" placeholder="Locomotive number" hidden>
+          </div>
+          <div class="field">
+            <span class="lbl">To locomotive <span class="hint">(receives fuel)</span></span>
+            <div class="chips" id="toLocos" role="radiogroup" aria-label="To locomotive"></div>
+            <input id="toOther" placeholder="Locomotive number" hidden>
+          </div>
+        </div>
+
         <div class="field">
-          <span class="lbl">Litres delivered</span>
+          <span class="lbl">Litres</span>
           <div class="chips" id="litreChips" role="radiogroup" aria-label="Litres"></div>
           <input id="litres" inputmode="decimal" placeholder="Litres" hidden>
         </div>
-        <div class="field">
-          <span class="lbl">Supplier</span>
-          <div class="chips" id="suppliers" role="radiogroup" aria-label="Supplier"></div>
-          <input id="supplierOther" placeholder="Supplier name" hidden>
-        </div>
-        <div class="row">
-          <label class="field"><span class="lbl">Waybill no.</span><input id="waybill" placeholder="Same for the whole truck"></label>
-          <label class="field"><span class="lbl">Remarks</span><input id="notes" placeholder="Optional"></label>
-        </div>
-        <div class="row">
-          <label class="field"><span class="lbl">Received by</span><input id="receivedBy" placeholder="Your name"></label>
-          <label class="field"><span class="lbl">Witnessed by (audit)</span><input id="witness" placeholder="Auditor's name"></label>
-        </div>
+
+        <label class="field" id="decNoteBox" hidden><span class="lbl">Reason for decant <span class="hint">(optional)</span></span><input id="decNote" placeholder="e.g. 43040 low before service"></label>
+
         <div class="btns"><button type="submit" class="primary" id="goBtn">Stamp &amp; save</button></div>
         <div class="msg" id="msg" role="status"></div>
-        <div class="batch">
-          <span>Today: <b id="todayTxt">—</b></span>
-          <button type="button" class="link" id="newBtn">Start a new truck</button>
-        </div>
+        <div class="batch"><span>Today: <b id="todayTxt">—</b></span></div>
       </form>
     </div>
     <div class="card">
       <h2>Stamped proof</h2>
-      <div class="preview" id="preview"><p>After you tap Stamp &amp; save, the photo shows here with the locomotive, litres, supplier, date, time, Oyingbo Station and a tamper fingerprint burned into a strip underneath.</p></div>
+      <div class="preview" id="preview"><p>After you tap Stamp &amp; save, the photo shows here with the details burned into a strip underneath: locomotive, litres, date, time, Oyingbo Station and a tamper fingerprint.</p></div>
       <div class="btns">
         <button id="shareBtn" disabled>Send to WhatsApp…</button>
         <button id="dlBtn" disabled>Save to phone</button>
@@ -197,29 +250,29 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 
   <section class="card" id="regView" hidden>
     <div class="reghead">
-      <h2>Delivery register</h2>
+      <h2>Fuel register</h2>
       <div class="btns"><select id="month" aria-label="Month"></select><button type="button" id="csvBtn">Export CSV</button></div>
     </div>
-    <div class="totals" id="totals"></div>
+    <div class="tablewrap"><table class="sumtable" id="sumTable"></table></div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Photo</th><th>Date / time</th><th>Loco</th><th class="num">Litres</th><th>Supplier</th><th>Waybill</th><th>Received / witness</th><th>Record · fingerprint</th></tr></thead>
+        <thead><tr><th>Photo</th><th>Date / time</th><th>Type</th><th>Loco</th><th class="num">Litres</th><th>Supplier · waybill</th><th>Received / witness</th><th>Record · fingerprint</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <p class="who">Records are write-once: once saved, a delivery and its photo cannot be edited or deleted. <button type="button" class="link" id="signOut">Sign out of this phone</button></p>
+    <p class="who">Records are write-once: once saved, an entry and its photo cannot be edited or deleted. <button type="button" class="link" id="signOut">Sign out of this phone</button></p>
   </section>
 </div>
 
-<dialog id="zoom"><img id="zoomImg" alt="Stamped delivery photo"><button id="zoomClose">Close</button></dialog>
+<dialog id="zoom"><img id="zoomImg" alt="Stamped photo"><button id="zoomClose">Close</button></dialog>
 
 <script>
 const STATION="Oyingbo Station";
 const LOCOS=["43010","43040","43184","43304"];
 const SUPPLIERS=["HIRCON ENGINEERING","STRONG TOWER"];
-const LITRES=["3750","5000"];
+const DEL_LITRES=["3750","5000"], DEC_LITRES=["500","1000"];
 const $=id=>document.getElementById(id);
-let records=[], pending=[], current=null, photoFile=null, busy=false, PIN="";
+let records=[], pending=[], current=null, photoFile=null, busy=false, PIN="", mode="delivery";
 
 /* ---------- helpers ---------- */
 const pad=n=>String(n).padStart(2,"0");
@@ -232,39 +285,43 @@ const num=n=>Number(n).toLocaleString("en-GB");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pick=name=>{const r=document.querySelector(`input[name="${name}"]:checked`);return r?r.value:""};
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const isDec=r=>r.type==="decant";
 function msg(t,cls){$("msg").textContent=t;$("msg").className="msg "+(cls||"")}
 function chips(el,name,vals,labelFn){$(el).innerHTML=[...vals,"Other"].map(v=>`<label><input type="radio" name="${name}" value="${esc(v)}"><span>${labelFn?labelFn(v):esc(v)}</span></label>`).join("")}
 function setChip(name,v){const r=[...document.querySelectorAll(`input[name="${name}"]`)].find(i=>i.value===v);if(r){r.checked=true;return true}return false}
+function bindOther(group,name,input){$(group).addEventListener("change",()=>{const o=pick(name)==="Other";$(input).hidden=!o;if(o)$(input).focus()})}
+function chipVal(name,input){const v=pick(name);return v==="Other"?$(input).value.trim():v}
 function setStatus(ok,t){$("status").innerHTML=`Register: <b class="${ok?"":"off"}">${esc(t)}</b>`}
 const api=(path,opt={})=>fetch(path,{...opt,headers:{...(opt.headers||{}),"x-pin":PIN}});
 
-/* ---------- sign-in gate ---------- */
+/* ---------- sign-in ---------- */
 async function checkPin(pin){
   const ac=new AbortController();const t=setTimeout(()=>ac.abort(),15000);
   try{const r=await fetch("/api/check?t="+Date.now(),{headers:{"x-pin":pin},cache:"no-store",signal:ac.signal});return r.status}
   catch(e){return e.name==="AbortError"?"timeout":"network"}
   finally{clearTimeout(t)}
 }
+function gmsg(t){$("gMsg").textContent=t;$("gMsg").className="msg err"}
 $("gateForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const pin=$("gPin").value.replace(/\s+/g,""), name=$("gName").value.trim();
-  if(!pin){$("gMsg").textContent="Enter the station PIN.";$("gMsg").className="msg err";return}
-  if(!name){$("gMsg").textContent="Enter your name.";$("gMsg").className="msg err";return}
+  const pin=$("gPin").value.replace(/\s+/g,""),name=$("gName").value.trim();
+  if(!pin)return gmsg("Enter the station PIN.");
+  if(!name)return gmsg("Enter your name.");
   $("gBtn").disabled=true;$("gMsg").textContent="Checking…";$("gMsg").className="msg";
   try{
     const st=await checkPin(pin);
-    if(st==="timeout"){$("gMsg").textContent="The server took too long to answer (over 15 s). Check your data connection and try again.";$("gMsg").className="msg err";return}
-    if(st==="network"){$("gMsg").textContent="Couldn't reach the server. Check your internet connection and try again.";$("gMsg").className="msg err";return}
-    if(st===401){$("gMsg").textContent="That PIN is wrong. Ask the Maintenance Officer for the station PIN.";$("gMsg").className="msg err";return}
-    if(st!==200){$("gMsg").textContent="The app's server isn't responding right now (code "+st+"). Try again in a minute.";$("gMsg").className="msg err";return}
-    ls.set("fdp-pin",pin);const p=ls.get("fdp-prefs",{});p.receivedBy=name;ls.set("fdp-prefs",p);
+    if(st==="timeout")return gmsg("The server took too long to answer (over 15 s). Check your data connection and try again.");
+    if(st==="network")return gmsg("Couldn't reach the server. Check your internet connection and try again.");
+    if(st===401)return gmsg("That PIN is wrong. Ask the Maintenance Officer for the station PIN.");
+    if(st!==200)return gmsg("The app's server isn't responding right now (code "+st+"). Try again in a minute.");
+    ls.set("fdp-pin",pin);ls.set("fdp-name",name);
     $("gMsg").textContent="";window.scrollTo(0,0);start();
-  }catch(err){$("gMsg").textContent="Unexpected error: "+(err&&err.message||err);$("gMsg").className="msg err"}
+  }catch(err){gmsg("Unexpected error: "+(err&&err.message||err))}
   finally{$("gBtn").disabled=false}
 });
 $("signOut").addEventListener("click",()=>{ls.del("fdp-pin");location.reload()});
 
-/* ---------- tabs ---------- */
+/* ---------- tabs & mode ---------- */
 function tab(which){
   const reg=which==="reg";
   $("tabLog").setAttribute("aria-selected",String(!reg));$("tabReg").setAttribute("aria-selected",String(reg));
@@ -273,35 +330,73 @@ function tab(which){
 }
 $("tabLog").addEventListener("click",()=>tab("log"));
 $("tabReg").addEventListener("click",()=>tab("reg"));
+function setMode(m){
+  mode=m;const dec=m==="decant";
+  $("modeDel").setAttribute("aria-pressed",String(!dec));$("modeDec").setAttribute("aria-pressed",String(dec));
+  $("delFields").hidden=dec;$("decFields").hidden=!dec;$("decNoteBox").hidden=!dec;
+  chips("litreChips","litre",dec?DEC_LITRES:DEL_LITRES,v=>v==="Other"?"Other":num(v)+" L");
+  setChip("litre",dec?DEC_LITRES[0]:DEL_LITRES[0]);$("litres").hidden=true;$("litres").value="";
+  $("shotTxt").textContent=photoFile?$("shotTxt").textContent:(dec?"Opens the camera. Get both locomotives or the transfer meter in frame.":"Opens the camera. Get the loco number and the meter reading in frame.");
+  $("goBtn").textContent=dec?"Stamp & save decant":"Stamp & save";
+  msg("");
+}
+$("modeDel").addEventListener("click",()=>setMode("delivery"));
+$("modeDec").addEventListener("click",()=>setMode("decant"));
 
 /* ---------- controls ---------- */
 chips("locos","loco",LOCOS,v=>`${esc(v)}<span class="done" data-done="${esc(v)}"></span>`);
-chips("litreChips","litre",LITRES,v=>v==="Other"?"Other":num(v)+" L");
+chips("fromLocos","from",LOCOS);
+chips("toLocos","to",LOCOS);
 chips("suppliers","supplier",SUPPLIERS,v=>v==="HIRCON ENGINEERING"?"HIRCON":esc(v));
-$("locos").addEventListener("change",()=>{$("locoOther").hidden=pick("loco")!=="Other";if(pick("loco")==="Other")$("locoOther").focus()});
-$("litreChips").addEventListener("change",()=>{$("litres").hidden=pick("litre")!=="Other";if(pick("litre")==="Other")$("litres").focus()});
-$("suppliers").addEventListener("change",()=>{$("supplierOther").hidden=pick("supplier")!=="Other";if(pick("supplier")==="Other")$("supplierOther").focus()});
-function savePrefs(){ls.set("fdp-prefs",{supplier:pick("supplier"),supplierOther:$("supplierOther").value,litres:pick("litre"),litresOther:$("litres").value,waybill:$("waybill").value,receivedBy:$("receivedBy").value,witness:$("witness").value,day:dayKey(Date.now())})}
-function restore(){
-  const p=ls.get("fdp-prefs",{});
-  setChip("litre",p.litres||"3750"); if(p.litres==="Other"){$("litres").hidden=false;$("litres").value=p.litresOther||""}
-  setChip("supplier",p.supplier||SUPPLIERS[0]); if(p.supplier==="Other"){$("supplierOther").hidden=false;$("supplierOther").value=p.supplierOther||""}
-  $("receivedBy").value=p.receivedBy||"";
-  if(p.day===dayKey(Date.now())){$("waybill").value=p.waybill||"";$("witness").value=p.witness||""}
-  setChip("loco",LOCOS[0]);
+bindOther("locos","loco","locoOther");bindOther("fromLocos","from","fromOther");bindOther("toLocos","to","toOther");
+bindOther("suppliers","supplier","supplierOther");bindOther("litreChips","litre","litres");
+setChip("loco",LOCOS[0]);setChip("from",LOCOS[0]);setChip("to",LOCOS[1]);
+
+/* ---------- day details (once per day) ---------- */
+function getDay(){const d=ls.get("fdp-day",{});return d.day===dayKey(Date.now())?d:null}
+function fillDayForm(){
+  const d=getDay()||{}, last=ls.get("fdp-day",{});
+  setChip("supplier",d.supplier||last.supplier||SUPPLIERS[0]);
+  if((d.supplier||last.supplier)==="Other"){$("supplierOther").hidden=false;$("supplierOther").value=d.supplierOther||last.supplierOther||""}
+  $("waybill").value=d.waybill||"";$("witness").value=d.witness||"";$("notes").value=d.notes||"";
+  $("receivedBy").value=d.receivedBy||last.receivedBy||ls.get("fdp-name","");
 }
-function resetPhoto(){$("photo").value="";photoFile=null;$("shotBox").classList.remove("has");$("shotHead").textContent="Take photo";$("shotTxt").textContent="Opens the camera. Get the loco number and the meter reading in frame."}
+function readDayForm(){return{day:dayKey(Date.now()),supplier:pick("supplier"),supplierOther:$("supplierOther").value.trim(),waybill:$("waybill").value.trim(),receivedBy:$("receivedBy").value.trim(),witness:$("witness").value.trim(),notes:$("notes").value.trim()}}
+function supplierName(d){return d.supplier==="Other"?d.supplierOther:d.supplier}
+function renderDay(){
+  const d=getDay();
+  $("dayTitle").textContent="Details for "+fmtDate(Date.now());
+  if(!d){$("dayForm").hidden=false;$("daySum").hidden=true;$("dayToggle").hidden=true;return}
+  $("dayForm").hidden=true;$("daySum").hidden=false;$("dayToggle").hidden=false;$("dayToggle").textContent="Edit";
+  const parts=[`<b>${esc(supplierName(d)||"—")}</b>`,`Waybill <b>${esc(d.waybill||"—")}</b>`,`Received <b>${esc(d.receivedBy||"—")}</b>`,`Witness <b>${esc(d.witness||"—")}</b>`];
+  $("daySum").innerHTML=parts.join(" · ")+(d.notes?`<br><span class="muted">${esc(d.notes)}</span>`:"");
+}
+$("dayToggle").addEventListener("click",()=>{const open=$("dayForm").hidden;fillDayForm();$("dayForm").hidden=!open;$("daySum").hidden=open;$("dayToggle").textContent=open?"Cancel":"Edit"});
+$("daySave").addEventListener("click",()=>{
+  const d=readDayForm();
+  if(!supplierName(d))return msg("Choose the supplier for today.","err");
+  if(!d.receivedBy)return msg("Enter who is receiving the fuel today.","err");
+  ls.set("fdp-day",d);renderDay();msg("Today's details saved. They'll be used for every entry until tomorrow.","ok");
+});
+function ensureDay(){
+  if(getDay())return getDay();
+  const d=readDayForm();
+  if(!supplierName(d)||!d.receivedBy)return null;
+  ls.set("fdp-day",d);renderDay();return d;
+}
+
+function resetPhoto(){$("photo").value="";photoFile=null;$("shotBox").classList.remove("has");$("shotHead").textContent="Take photo";$("shotTxt").textContent=mode==="decant"?"Opens the camera. Get both locomotives or the transfer meter in frame.":"Opens the camera. Get the loco number and the meter reading in frame."}
 $("photo").addEventListener("change",e=>{
   photoFile=e.target.files[0]||null;
   if(!photoFile)return resetPhoto();
   $("shotBox").classList.add("has");$("shotHead").textContent="Photo ready ✓";
   $("shotTxt").textContent=`Taken ${fmtDate(photoFile.lastModified)} at ${fmtTime(photoFile.lastModified)} · tap to retake`;
 });
-$("newBtn").addEventListener("click",()=>{$("waybill").value="";$("witness").value="";$("notes").value="";setChip("loco",nextLoco()||LOCOS[0]);savePrefs();msg("New truck started. Enter its waybill number.");$("waybill").focus()});
 
 /* ---------- stamping ---------- */
 async function sha(buf){try{const h=await crypto.subtle.digest("SHA-256",buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,16).toUpperCase()}catch(e){return "UNAVAILABLE"}}
 function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),1000)};i.onerror=rej;i.src=u})}
+function fitBig(x,t,X,Y,maxW,size,weight,fam){let z=size;x.font=`${weight} ${z}px ${fam}`;while(x.measureText(t).width>maxW&&z>size*0.35){z-=size*0.04;x.font=`${weight} ${z}px ${fam}`}x.fillText(t,X,Y)}
 function fitText(x,t,X,Y,maxW){let s=t;while(x.measureText(s).width>maxW&&s.length>4)s=s.slice(0,-2);if(s!==t)s=s.slice(0,-1)+"…";x.fillText(s,X,Y)}
 async function stamp(file,r){
   try{await document.fonts.ready}catch(e){}
@@ -311,16 +406,18 @@ async function stamp(file,r){
   const c=document.createElement("canvas");c.width=W;c.height=H+P;const x=c.getContext("2d");
   x.drawImage(img,0,0,W,H);
   x.fillStyle="#101820";x.fillRect(0,H,W,P);
-  const bar=Math.max(4,6*u);x.fillStyle="#f0a52a";x.fillRect(0,H,W,bar);
+  const dec=isDec(r);
+  const bar=Math.max(4,6*u);x.fillStyle=dec?"#8fb6d6":"#f0a52a";x.fillRect(0,H,W,bar);
   const pd=28*u,top=H+bar;x.textBaseline="top";
   x.fillStyle="#93a1ad";x.font=`600 ${15*u}px Barlow, Arial, sans-serif`;
-  fitText(x,"LAMATA · LRMT RED LINE · "+STATION.toUpperCase()+" · DIESEL DELIVERY PROOF",pd,top+18*u,W-2*pd);
-  x.fillStyle="#ffffff";x.font=`700 ${92*u}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
-  fitText(x,"LOCO "+r.loco,pd,top+44*u,W*0.48-pd);
-  x.fillStyle="#f0a52a";x.font=`700 ${64*u}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
-  fitText(x,num(r.litres)+" LITRES",pd,top+142*u,W*0.48-pd);
-  const cx=W*0.52;
-  const lines=[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["SUPPLIER",r.supplier],["WAYBILL",r.waybill||"—"],["RECEIVED",r.receivedBy||"—"],["WITNESS",r.witness||"—"]];
+  fitText(x,"LAMATA · LRMT RED LINE · "+STATION.toUpperCase()+(dec?" · DIESEL DECANT PROOF":" · DIESEL DELIVERY PROOF"),pd,top+18*u,W-2*pd);
+  const FAM='"Barlow Condensed","Arial Narrow",Arial,sans-serif', colW=W*0.50-pd;
+  x.fillStyle="#ffffff";fitBig(x,dec?`${r.fromLoco} → ${r.loco}`:"LOCO "+r.loco,pd,top+48*u,colW,(dec?80:92)*u,700,FAM);
+  x.fillStyle=dec?"#8fb6d6":"#f0a52a";fitBig(x,num(r.litres)+(dec?" L DECANTED":" LITRES"),pd,top+150*u,colW,64*u,700,FAM);
+  const cx=W*0.54;
+  const lines=dec
+    ?[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["FROM",r.fromLoco],["TO",r.loco],["DONE BY",r.receivedBy||"—"],["WITNESS",r.witness||"—"]]
+    :[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["SUPPLIER",r.supplier],["WAYBILL",r.waybill||"—"],["RECEIVED",r.receivedBy||"—"],["WITNESS",r.witness||"—"]];
   const step=(P-80*u)/lines.length;
   lines.forEach(([k,v],i)=>{const y=top+40*u+i*step;
     x.fillStyle="#93a1ad";x.font=`500 ${14*u}px "IBM Plex Mono",Menlo,monospace`;x.fillText(k,cx,y+5*u);
@@ -330,10 +427,10 @@ async function stamp(file,r){
   return await new Promise(res=>c.toBlob(res,"image/jpeg",0.88));
 }
 
-/* ---------- offline queue (IndexedDB on this phone) ---------- */
+/* ---------- offline queue ---------- */
 let idbP=null;const memQ=new Map();
 function idb(){if(!idbP)idbP=new Promise((res,rej)=>{try{const q=indexedDB.open("fdp",1);q.onupgradeneeded=()=>q.result.createObjectStore("q",{keyPath:"id"});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}}).catch(()=>null);return idbP}
-async function qOp(mode,fn){const d=await idb();if(!d)return null;return new Promise((res,rej)=>{const t=d.transaction("q",mode);const r=fn(t.objectStore("q"));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}
+async function qOp(m,fn){const d=await idb();if(!d)return null;return new Promise((res,rej)=>{const t=d.transaction("q",m);const r=fn(t.objectStore("q"));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}
 async function qPut(item){try{if(await idb()){await qOp("readwrite",s=>s.put(item));return true}}catch(e){}memQ.set(item.id,item);return false}
 async function qDel(id){memQ.delete(id);try{await qOp("readwrite",s=>s.delete(id))}catch(e){}}
 async function qAll(){let a=[];try{a=(await qOp("readonly",s=>s.getAll()))||[]}catch(e){}const ids=new Set(a.map(i=>i.id));memQ.forEach((v,k)=>{if(!ids.has(k))a.push(v)});return a}
@@ -351,38 +448,51 @@ async function flush(){
   finally{flushing=false;await refreshPending();if(any)loadRegister()}
 }
 
-/* ---------- main action ---------- */
+/* ---------- save entry ---------- */
 $("f").addEventListener("submit",async e=>{
   e.preventDefault();if(busy)return;
-  let loco=pick("loco");if(loco==="Other")loco=$("locoOther").value.trim();
-  let supplier=pick("supplier");if(supplier==="Other")supplier=$("supplierOther").value.trim();
-  const litres=parseFloat(String(pick("litre")==="Other"?$("litres").value:pick("litre")).replace(/,/g,""));
+  const dec=mode==="decant";
+  const day=ensureDay();
+  if(!day){$("dayForm").hidden=false;$("daySum").hidden=true;return msg("Fill in today's details first (supplier and received by), then tap Use these for today.","err")}
   if(!photoFile)return msg("Take the photo first.","err");
-  if(!loco)return msg("Choose the locomotive.","err");
-  if(!(litres>0))return msg("Enter the litres as a number, e.g. 3750.","err");
-  if(!supplier)return msg("Choose the supplier.","err");
-  busy=true;$("goBtn").disabled=true;msg("Stamping…");savePrefs();
+  let loco,fromLoco="";
+  if(dec){
+    fromLoco=chipVal("from","fromOther");loco=chipVal("to","toOther");
+    if(!fromLoco||!loco)return msg("Choose both the giving and the receiving locomotive.","err");
+    if(fromLoco===loco)return msg("The two locomotives must be different.","err");
+  }else{
+    loco=chipVal("loco","locoOther");
+    if(!loco)return msg("Choose the locomotive.","err");
+  }
+  const litres=parseFloat(String(chipVal("litre","litres")).replace(/,/g,""));
+  if(!(litres>0))return msg("Enter the litres as a number, e.g. "+(dec?"500":"3750")+".","err");
+  busy=true;$("goBtn").disabled=true;msg("Stamping…");
   try{
     const captured=new Date(photoFile.lastModified||Date.now()),now=new Date(),l=lagos(captured);
     const fp=await sha(await photoFile.arrayBuffer());
-    const id=`FD-${String(l.getFullYear()).slice(2)}${pad(l.getMonth()+1)}${pad(l.getDate())}-${pad(l.getHours())}${pad(l.getMinutes())}-${loco.replace(/[^A-Za-z0-9]/g,"")}-${Math.random().toString(36).slice(2,5).toUpperCase()}`;
-    const rec={id,loco,supplier,litres,station:STATION,waybill:$("waybill").value.trim(),receivedBy:$("receivedBy").value.trim(),witness:$("witness").value.trim(),notes:$("notes").value.trim(),capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
+    const tag=dec?`DC-${fromLoco.replace(/[^A-Za-z0-9]/g,"")}-${loco.replace(/[^A-Za-z0-9]/g,"")}`:loco.replace(/[^A-Za-z0-9]/g,"");
+    const id=`FD-${String(l.getFullYear()).slice(2)}${pad(l.getMonth()+1)}${pad(l.getDate())}-${pad(l.getHours())}${pad(l.getMinutes())}-${tag}-${Math.random().toString(36).slice(2,5).toUpperCase()}`;
+    const notes=dec?[$("decNote").value.trim(),day.notes].filter(Boolean).join(" · "):day.notes;
+    const rec={id,type:dec?"decant":"delivery",loco,fromLoco:dec?fromLoco:"",supplier:dec?"":supplierName(day),litres,station:STATION,
+      waybill:dec?"":day.waybill,receivedBy:day.receivedBy,witness:day.witness,notes,capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
     let blob;try{blob=await stamp(photoFile,rec)}catch(err){throw new Error("img")}
     if(current)URL.revokeObjectURL(current.url);
     current={blob,url:URL.createObjectURL(blob),rec};
-    $("preview").innerHTML=`<img src="${current.url}" alt="Stamped delivery photo for locomotive ${esc(loco)}">`;
+    $("preview").innerHTML=`<img src="${current.url}" alt="Stamped photo ${esc(id)}">`;
     $("dlBtn").disabled=false;$("shareBtn").disabled=false;
     msg("Saving…");
-    let saved=false;
-    if(navigator.onLine){try{await upload(rec,blob);saved=true}catch(err){if(err.code==="pin"){msg("The station PIN has changed. Sign out and sign in again with the new PIN.","err");}}}
-    if(!saved){const durable=await qPut({id,rec,blob});await refreshPending();if(!durable)msg("No connection and this phone can't store it offline. Tap Save to phone now; keep the app open and it will upload when signal returns.","err")}
-    resetPhoto();$("notes").value="";if(pick("loco")==="Other")$("locoOther").value="";
+    let saved=false,pinErr=false;
+    if(navigator.onLine){try{await upload(rec,blob);saved=true}catch(err){if(err.code==="pin")pinErr=true}}
+    if(pinErr){msg("The station PIN has changed. Sign out and sign in again with the new PIN.","err");return}
+    let durable=true;
+    if(!saved){durable=await qPut({id,rec,blob});await refreshPending()}
+    resetPhoto();$("decNote").value="";
     if(saved)records.push(rec);
     render();
-    const nx=nextLoco();if(nx)setChip("loco",nx);
-    const nextTxt=nx?` Next: ${nx}, take its photo.`:" All four locomotives are logged for today.";
-    if(saved)msg(`${loco} saved.${nextTxt}`,"ok");
-    else if(!$("msg").classList.contains("err"))msg(`No signal. ${loco} is kept on this phone and uploads by itself when signal returns.${nextTxt}`,"ok");
+    const what=dec?`Decant ${fromLoco} → ${loco} (${num(litres)} L)`:`${loco} (${num(litres)} L)`;
+    if(saved)msg(`${what} saved.`,"ok");
+    else if(durable)msg(`No signal. ${what} is kept on this phone and uploads by itself when signal returns.`,"ok");
+    else msg("No connection and this phone can't store it offline. Tap Save to phone now; keep the app open and it will upload when signal returns.","err");
     if(saved)loadRegister();
   }catch(err){msg(err.message==="img"?"Could not read that photo. Retake it.":"Something went wrong. Try again.","err")}
   finally{busy=false;$("goBtn").disabled=false}
@@ -397,15 +507,17 @@ $("shareBtn").addEventListener("click",async()=>{
   if(!current)return;
   const file=new File([current.blob],current.rec.id+".jpg",{type:"image/jpeg"});
   const r=current.rec;
-  const text=`Diesel delivery · ${STATION}\nLoco ${r.loco} · ${num(r.litres)} L · ${r.supplier}\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)} · Waybill ${r.waybill||"—"}\nRef ${r.id}`;
+  const text=isDec(r)
+    ?`Diesel decant · ${STATION}\n${r.fromLoco} → ${r.loco} · ${num(r.litres)} L\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)}\nRef ${r.id}`
+    :`Diesel delivery · ${STATION}\nLoco ${r.loco} · ${num(r.litres)} L · ${r.supplier}\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)} · Waybill ${r.waybill||"—"}\nRef ${r.id}`;
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],text});}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to phone, then send it from your gallery.","err")}
+    try{await navigator.share({files:[file],text})}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to phone, then send it from your gallery.","err")}
   }else{$("dlBtn").click();msg("This phone can't share directly. The photo was saved; send it from your gallery.")}
 });
 
 /* ---------- register ---------- */
-function todays(){const t=dayKey(Date.now());return [...records,...pending.filter(p=>!records.some(r=>r.id===p.id))].filter(r=>dayKey(r.capturedAt)===t)}
-function nextLoco(){const done=new Set(todays().map(r=>r.loco));return LOCOS.find(l=>!done.has(l))}
+function allRows(){return [...records,...pending.filter(p=>!records.some(r=>r.id===p.id))]}
+function todays(){const t=dayKey(Date.now());return allRows().filter(r=>dayKey(r.capturedAt)===t)}
 async function loadRegister(){
   if(!PIN)return;
   try{
@@ -415,32 +527,44 @@ async function loadRegister(){
     records=await r.json();
     setStatus(!offline&&navigator.onLine,offline||!navigator.onLine?"offline · showing last copy":"live");
     render();
-    const sel=pick("loco");if(!photoFile&&LOCOS.includes(sel)&&todays().some(x=>x.loco===sel)){const nx=nextLoco();if(nx)setChip("loco",nx)}
   }catch(e){setStatus(false,"offline · saving on this phone")}
 }
 function visibleRows(){
-  const list=[...records,...pending.filter(p=>!records.some(r=>r.id===p.id))];
+  const list=allRows();
   const months=[...new Set(list.map(r=>monthKey(r.capturedAt)))].sort().reverse();
   if(!months.length)months.push(monthKey(Date.now()));
   const cur=months.includes($("month").value)?$("month").value:months[0];
-  return {list,months,cur,rows:list.filter(r=>monthKey(r.capturedAt)===cur).sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))};
+  return {months,cur,rows:list.filter(r=>monthKey(r.capturedAt)===cur).sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))};
+}
+function summarise(rows){
+  const s={};const g=l=>s[l]||(s[l]={del:0,nDel:0,in:0,out:0});
+  rows.forEach(r=>{const L=Number(r.litres||0);if(isDec(r)){g(r.fromLoco).out+=L;g(r.loco).in+=L}else{const x=g(r.loco);x.del+=L;x.nDel++}});
+  return s;
 }
 function render(){
-  const tl=todays(),done={};tl.forEach(r=>done[r.loco]=(done[r.loco]||0)+Number(r.litres||0));
-  document.querySelectorAll("[data-done]").forEach(el=>{const l=el.dataset.done;el.textContent=done[l]?"✓ "+num(done[l])+" L":""});
-  const tot=tl.reduce((a,r)=>a+Number(r.litres||0),0);
-  $("todayTxt").textContent=tl.length?`${tl.length} of ${LOCOS.length} locos · ${num(tot)} L`:"nothing logged yet";
+  // today strip + chip badges
+  const tl=todays(),sm=summarise(tl);
+  document.querySelectorAll("[data-done]").forEach(el=>{const x=sm[el.dataset.done];el.textContent=x&&x.nDel?`✓ ${x.nDel>1?x.nDel+"× · ":""}${num(x.del)} L`:""});
+  const nDel=tl.filter(r=>!isDec(r)).length,nDec=tl.filter(isDec).length;
+  const totDel=tl.filter(r=>!isDec(r)).reduce((a,r)=>a+Number(r.litres||0),0);
+  $("todayTxt").textContent=tl.length?`${nDel} deliver${nDel===1?"y":"ies"} · ${num(totDel)} L`+(nDec?` · ${nDec} decant${nDec===1?"":"s"}`:""):"nothing logged yet";
+  // register
   const {months,cur,rows}=visibleRows();
   $("month").innerHTML=months.map(m=>{const [y,mo]=m.split("-");return `<option value="${m}" ${m===cur?"selected":""}>${new Date(y,mo-1).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</option>`}).join("");
-  const by={};rows.forEach(r=>by[r.loco]=(by[r.loco]||0)+Number(r.litres||0));
-  const all=rows.reduce((a,r)=>a+Number(r.litres||0),0);
-  $("totals").innerHTML=Object.keys(by).sort().map(l=>`<div class="tot"><b>${esc(l)}</b><span>${num(by[l])} L</span></div>`).join("")+`<div class="tot"><b>Month total · ${rows.length} deliveries</b><span>${num(all)} L</span></div>`;
+  const ms=summarise(rows),keys=Object.keys(ms).sort();
+  const T={del:0,in:0,out:0,n:0};keys.forEach(k=>{T.del+=ms[k].del;T.in+=ms[k].in;T.out+=ms[k].out;T.n+=ms[k].nDel});
+  $("sumTable").innerHTML=keys.length?`<thead><tr><th>Loco</th><th class="num">Deliveries</th><th class="num">Delivered (L)</th><th class="num">Decant in (L)</th><th class="num">Decant out (L)</th><th class="num">Net (L)</th></tr></thead><tbody>`+
+    keys.map(k=>{const x=ms[k];return `<tr><td><b>${esc(k)}</b></td><td class="num">${x.nDel}</td><td class="num">${num(x.del)}</td><td class="num">${x.in?num(x.in):"—"}</td><td class="num">${x.out?num(x.out):"—"}</td><td class="num"><b>${num(x.del+x.in-x.out)}</b></td></tr>`}).join("")+
+    `<tr class="total"><td>Total</td><td class="num">${T.n}</td><td class="num">${num(T.del)}</td><td class="num">${T.in?num(T.in):"—"}</td><td class="num">${T.out?num(T.out):"—"}</td><td class="num">${num(T.del)}</td></tr></tbody>`:"";
   $("rows").innerHTML=rows.length?rows.map(r=>{
     const src=r.queued?"":`/api/photo/${encodeURIComponent(r.id)}?pin=${encodeURIComponent(PIN)}`;
-    const img=src?`<img src="${esc(src)}" alt="Delivery photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
-    const tag=r.queued?'<span class="tag q">Waiting to upload</span>':"";
-    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td><span class="loco">${esc(r.loco)}</span>${tag}</td><td class="num">${num(r.litres)}</td><td>${esc(r.supplier)}</td><td>${esc(r.waybill||"—")}</td><td>${esc(r.receivedBy||"—")}<br><span style="color:var(--muted)">${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
-  }).join(""):`<tr><td colspan="8" class="empty">No deliveries recorded this month. They appear here as soon as they are saved.</td></tr>`;
+    const img=src?`<img src="${esc(src)}" alt="Photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
+    const q=r.queued?'<span class="tag q">Waiting to upload</span>':"";
+    const type=isDec(r)?'<span class="type dec">Decant</span>':'<span class="type del">Delivery</span>';
+    const loco=isDec(r)?`<span class="loco">${esc(r.fromLoco)} → ${esc(r.loco)}</span>`:`<span class="loco">${esc(r.loco)}</span>`;
+    const sup=isDec(r)?`<span style="color:var(--muted)">${esc(r.notes||"—")}</span>`:`${esc(r.supplier)}<br><span style="color:var(--muted)">${esc(r.waybill||"—")}</span>`;
+    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td>${type}${q}</td><td>${loco}</td><td class="num">${num(r.litres)}</td><td>${sup}</td><td>${esc(r.receivedBy||"—")}<br><span style="color:var(--muted)">${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
+  }).join(""):`<tr><td colspan="8" class="empty">Nothing recorded this month. Entries appear here as soon as they are saved.</td></tr>`;
 }
 $("month").addEventListener("change",render);
 $("rows").addEventListener("click",e=>{const z=e.target.dataset&&e.target.dataset.zoom;if(z){$("zoomImg").src=z;$("zoom").showModal()}});
@@ -448,11 +572,11 @@ $("zoomClose").addEventListener("click",()=>$("zoom").close());
 $("zoom").addEventListener("click",e=>{if(e.target===$("zoom"))$("zoom").close()});
 $("csvBtn").addEventListener("click",()=>{
   const {rows,cur}=visibleRows();
-  const head=["Record ID","Date","Time (WAT)","Station","Locomotive","Litres","Supplier","Waybill","Received by","Witnessed by","Remarks","Photo fingerprint","Status"];
+  const head=["Record ID","Type","Date","Time (WAT)","Station","Locomotive (receiving)","From locomotive (decant)","Litres","Supplier","Waybill","Received / done by","Witnessed by","Remarks","Photo fingerprint","Status"];
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station||STATION,r.loco,r.litres,r.supplier,r.waybill,r.receivedBy,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
+  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,isDec(r)?"Decant":"Delivery",fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station||STATION,r.loco,r.fromLoco||"",r.litres,r.supplier||"",r.waybill||"",r.receivedBy,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`oyingbo-fuel-deliveries-${cur}.csv`;document.body.appendChild(a);a.click();a.remove();
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`oyingbo-fuel-register-${cur}.csv`;document.body.appendChild(a);a.click();a.remove();
 });
 
 /* ---------- install prompt ---------- */
@@ -465,9 +589,11 @@ if(!standalone&&/iphone|ipad/i.test(navigator.userAgent)){$("installTip").hidden
 /* ---------- start ---------- */
 function start(){
   PIN=ls.get("fdp-pin","");
-  if(!PIN){$("gate").hidden=false;$("app").hidden=true;const p=ls.get("fdp-prefs",{});$("gName").value=p.receivedBy||"";return}
+  if(!PIN){$("gate").hidden=false;$("app").hidden=true;$("gName").value=ls.get("fdp-name","");return}
+  // carry the old single-prefs name forward
+  if(!ls.get("fdp-name","")){const p=ls.get("fdp-prefs",{});if(p.receivedBy)ls.set("fdp-name",p.receivedBy)}
   $("gate").hidden=true;$("app").hidden=false;
-  restore();render();refreshPending();loadRegister();flush();
+  fillDayForm();renderDay();setMode("delivery");render();refreshPending();loadRegister();flush();
 }
 window.addEventListener("online",()=>{setStatus(true,"back online · syncing");flush();loadRegister()});
 window.addEventListener("offline",()=>setStatus(false,"offline · saving on this phone"));

@@ -58,8 +58,13 @@ export default async (req, context) => {
     const litres = Number(meta.litres);
     if (!(litres > 0 && litres < 100000)) return json({ error: "bad_litres" }, 400);
 
+    const type = meta.type === "decant" ? "decant" : "delivery";
+    const fromLoco = type === "decant" ? clean(meta.fromLoco, 20) : "";
+    if (type === "decant" && (!fromLoco || fromLoco === clean(meta.loco, 20))) return json({ error: "bad_decant" }, 400);
     const rec = {
       id,
+      type,
+      fromLoco,
       loco: clean(meta.loco, 20),
       litres,
       supplier: clean(meta.supplier),
