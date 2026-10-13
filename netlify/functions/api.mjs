@@ -15,9 +15,11 @@ const clean = (v, max = 120) => String(v ?? "").slice(0, max).trim();
 
 export default async (req, context) => {
   const url = new URL(req.url);
-  const pin = process.env.ACCESS_PIN || "";
-  const given = req.headers.get("x-pin") || url.searchParams.get("pin") || "";
-  if (!pin || given !== pin) return json({ error: "bad_pin" }, 401);
+  let pin = "";
+  try { pin = (globalThis.Netlify?.env?.get("ACCESS_PIN") ?? process.env.ACCESS_PIN ?? "").trim(); } catch { pin = (process.env.ACCESS_PIN || "").trim(); }
+  if (!pin) return json({ error: "not_configured" }, 503);
+  const given = (req.headers.get("x-pin") || url.searchParams.get("pin") || "").replace(/\s+/g, "");
+  if (given !== pin) return json({ error: "bad_pin" }, 401);
 
   if (url.pathname === "/api/check") return json({ ok: true });
 
