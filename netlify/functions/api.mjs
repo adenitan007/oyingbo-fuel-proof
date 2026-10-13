@@ -17,7 +17,19 @@ export default async (req, context) => {
   const url = new URL(req.url);
   let pin = "";
   try { pin = (globalThis.Netlify?.env?.get("ACCESS_PIN") ?? process.env.ACCESS_PIN ?? "").trim(); } catch { pin = (process.env.ACCESS_PIN || "").trim(); }
-  if (url.pathname === "/api/ping") return json({ ok: true, server: "running", pinConfigured: Boolean(pin), pinLength: pin.length, time: new Date().toISOString() });
+  if (url.pathname === "/api/ping") {
+    const h = async (v) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 10);
+    let fromNetlify = null, fromProcess = null;
+    try { fromNetlify = globalThis.Netlify?.env?.get("ACCESS_PIN") ?? null; } catch {}
+    try { fromProcess = process.env.ACCESS_PIN ?? null; } catch {}
+    return json({
+      ok: true, server: "running", pinConfigured: Boolean(pin), pinLength: pin.length,
+      pinHash: pin ? await h(pin) : null,
+      netlifyEnvHash: fromNetlify != null ? await h(String(fromNetlify).trim()) : null,
+      processEnvHash: fromProcess != null ? await h(String(fromProcess).trim()) : null,
+      time: new Date().toISOString(),
+    });
+  }
   if (!pin) return json({ error: "not_configured" }, 503);
   const given = (req.headers.get("x-pin") || url.searchParams.get("pin") || "").replace(/\s+/g, "");
   if (given !== pin) return json({ error: "bad_pin" }, 401);
