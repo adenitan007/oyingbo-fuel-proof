@@ -241,14 +241,14 @@ const api=(path,opt={})=>fetch(path,{...opt,headers:{...(opt.headers||{}),"x-pin
 async function checkPin(pin){const r=await fetch("/api/check",{headers:{"x-pin":pin}});return r.status}
 $("gateForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const pin=$("gPin").value.trim(), name=$("gName").value.trim();
+  const pin=$("gPin").value.replace(/\s+/g,""), name=$("gName").value.trim();
   if(!pin){$("gMsg").textContent="Enter the station PIN.";$("gMsg").className="msg err";return}
   if(!name){$("gMsg").textContent="Enter your name.";$("gMsg").className="msg err";return}
   $("gBtn").disabled=true;$("gMsg").textContent="Checking…";$("gMsg").className="msg";
   try{
     const st=await checkPin(pin);
     if(st===401){$("gMsg").textContent="That PIN is wrong. Ask the Maintenance Officer for the station PIN.";$("gMsg").className="msg err";return}
-    if(st!==200)throw 0;
+    if(st!==200){$("gMsg").textContent="The app's server isn't responding right now (code "+st+"). Try again in a minute.";$("gMsg").className="msg err";return}
     ls.set("fdp-pin",pin);const p=ls.get("fdp-prefs",{});p.receivedBy=name;ls.set("fdp-prefs",p);
     start();
   }catch(err){$("gMsg").textContent="No connection. Connect to the internet for this first sign-in.";$("gMsg").className="msg err"}
