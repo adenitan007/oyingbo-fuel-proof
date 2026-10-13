@@ -1,0 +1,14 @@
+{
+  "name": "Oyingbo Fuel Proof",
+  "short_name": "Fuel Proof",
+  "description": "Stamped photo proof of diesel deliveries at Oyingbo Station, with a shared register for the audit team.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

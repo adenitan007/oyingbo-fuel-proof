@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101820">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fuel Proof">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Oyingbo Fuel Proof</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+
+/* Layout: phone-first single flow (photo → taps → one button), stamped proof beside it on wide screens, shared register below. */
+:root{
+  --bg:#eef1f3; --panel:#ffffff; --ink:#16202a; --muted:#5b6873; --line:#d3d9de;
+  --accent:#d98a0b; --accent-ink:#1a1204; --rail:#1f3a52; --rail-ink:#ffffff; --ok:#2e7d4f; --warn:#b4471b;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --panel:#17212a; --ink:#e6ebef; --muted:#93a1ad; --line:#2a3743;
+  --accent:#f0a52a; --accent-ink:#1a1204; --rail:#8fb6d6; --rail-ink:#0f151b; --ok:#6cc391; --warn:#ef8a5c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --panel:#17212a; --ink:#e6ebef; --muted:#93a1ad; --line:#2a3743;
+  --accent:#f0a52a; --accent-ink:#1a1204; --rail:#8fb6d6; --rail-ink:#0f151b; --ok:#6cc391; --warn:#ef8a5c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 64px;padding-inline:16px;display:grid;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px;border-bottom:3px solid var(--rail);padding-bottom:14px}
+.eyebrow{font:600 12px/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(30px,5vw,44px)/1 var(--display);margin:6px 0 0;letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--accent)}
+h2{font:700 22px/1.1 var(--display);margin:0;letter-spacing:.02em;text-transform:uppercase}
+.status{font:500 13px/1.4 var(--mono);color:var(--muted);display:grid;gap:2px;justify-items:end}
+.status b{color:var(--ok);font-weight:500}
+.status b.off{color:var(--warn)}
+.bench{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+@media (max-width:860px){.bench{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:16px;min-width:0}
+form{display:grid;gap:16px}
+.field{display:grid;gap:6px;min-width:0}
+.lbl{font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row{grid-template-columns:1fr}}
+input{font:500 16px/1.3 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:11px;width:100%;min-width:0}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{position:relative;flex:1 1 auto}
+.chips input{position:absolute;opacity:0;pointer-events:none;width:1px}
+.chips span{display:block;text-align:center;padding:11px 10px;border:1px solid var(--line);border-radius:4px;font:700 18px/1 var(--display);letter-spacing:.03em;background:var(--bg);cursor:pointer;white-space:nowrap}
+.chips input:checked+span{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
+.chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.chips .done{font:600 11px/1 var(--body);letter-spacing:.06em;display:block;margin-top:4px;color:var(--ok)}
+.chips input:checked+span .done{color:inherit;opacity:.8}
+.shot{border:2px dashed var(--accent);border-radius:6px;padding:20px 16px;text-align:center;cursor:pointer;display:grid;gap:4px;position:relative;background:var(--bg)}
+.shot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.shot strong{font:700 24px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.shot small{color:var(--muted);font-size:13px}
+.shot.has{border-style:solid;border-color:var(--ok)}
+.shot.has strong{color:var(--ok)}
+.shot:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button{font:700 17px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:14px 18px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:1 1 220px;font-size:20px;padding:16px}
+button.link{background:none;border:none;padding:4px 0;font:600 14px/1.2 var(--body);letter-spacing:0;text-transform:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.batch{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.batch b{color:var(--ink)}
+.preview{background:#0b1015;border-radius:4px;min-height:200px;display:grid;place-items:center;overflow:hidden}
+.preview img{display:block;width:100%;height:auto}
+.preview p{color:#93a1ad;font-size:14px;padding:24px;text-align:center;max-width:38ch;margin:0}
+.msg{font-size:15px;color:var(--muted);min-height:1.5em}
+.msg.err{color:var(--warn)}.msg.ok{color:var(--ok)}
+.totals{display:flex;flex-wrap:wrap;gap:8px}
+.tot{border:1px solid var(--line);border-radius:4px;padding:8px 12px;display:grid;gap:2px;min-width:110px}
+.tot b{font:700 18px/1 var(--display);letter-spacing:.03em}
+.tot span{font:500 14px/1.2 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.reghead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+select{font:500 15px/1.2 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:9px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.mono{font:12px/1.4 var(--mono);color:var(--muted)}
+td .loco{font:700 18px/1 var(--display)}
+td img{width:72px;height:54px;object-fit:cover;border-radius:3px;display:block;cursor:zoom-in;background:var(--bg)}
+.thumb0{width:72px;height:54px;border-radius:3px;background:var(--bg)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.tag{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;border:1px solid currentColor;border-radius:3px;padding:2px 5px;margin-left:6px;white-space:nowrap}
+.tag.ex{color:var(--warn)}.tag.q{color:var(--accent)}
+dialog{border:none;border-radius:6px;padding:0;max-width:min(96vw,1100px);background:#0b1015}
+dialog img{display:block;max-width:100%;max-height:86vh}
+dialog::backdrop{background:rgba(5,8,12,.8)}
+dialog button{position:absolute;top:8px;right:8px}
+
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
+.tabs{display:flex;gap:6px}
+.tabs button{padding:10px 16px;font-size:16px}
+.tabs button[aria-selected="true"]{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
+.gate{max-width:420px;margin:8vh auto 0;padding-inline:16px;display:grid;gap:16px}
+.gate .card{gap:14px}
+.gate p{margin:0;color:var(--muted)}
+.tip{font-size:14px;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:6px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.who{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <div>
+    <div class="eyebrow">LAMATA · LRMT Red Line · Oyingbo Station</div>
+    <h1>Fuel Delivery <span>Proof</span></h1>
+  </div>
+  <form class="card" id="gateForm" novalidate>
+    <p>Enter the station PIN and your name. You only do this once on this phone.</p>
+    <label class="field"><span class="lbl">Station PIN</span><input id="gPin" inputmode="numeric" autocomplete="one-time-code" placeholder="6 digits"></label>
+    <label class="field"><span class="lbl">Your name</span><input id="gName" autocomplete="name" placeholder="As it should appear on the stamp"></label>
+    <button class="primary" type="submit" id="gBtn">Continue</button>
+    <div class="msg" id="gMsg" role="status"></div>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <div class="eyebrow">LAMATA · LRMT Red Line · Oyingbo Station</div>
+      <h1>Fuel Delivery <span>Proof</span></h1>
+    </div>
+    <div class="status"><span id="status">Register: <b class="off">connecting…</b></span><span id="qstatus"></span></div>
+  </header>
+
+  <div class="tip" id="installTip" hidden>
+    <span id="installTxt">Add this app to your home screen so it opens like a normal app, even with no signal.</span>
+    <button type="button" id="installBtn" hidden>Install</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" id="tabLog">Log delivery</button>
+    <button role="tab" aria-selected="false" id="tabReg">Register</button>
+  </div>
+
+  <section class="bench" id="logView">
+    <div class="card">
+      <form id="f" novalidate>
+        <label class="shot" id="shotBox">
+          <input type="file" id="photo" accept="image/*" capture="environment">
+          <strong id="shotHead">Take photo</strong>
+          <small id="shotTxt">Opens the camera. Get the loco number and the meter reading in frame.</small>
+        </label>
+        <div class="field">
+          <span class="lbl">Locomotive</span>
+          <div class="chips" id="locos" role="radiogroup" aria-label="Locomotive"></div>
+          <input id="locoOther" placeholder="Locomotive number" hidden>
+        </div>
+        <div class="field">
+          <span class="lbl">Litres delivered</span>
+          <div class="chips" id="litreChips" role="radiogroup" aria-label="Litres"></div>
+          <input id="litres" inputmode="decimal" placeholder="Litres" hidden>
+        </div>
+        <div class="field">
+          <span class="lbl">Supplier</span>
+          <div class="chips" id="suppliers" role="radiogroup" aria-label="Supplier"></div>
+          <input id="supplierOther" placeholder="Supplier name" hidden>
+        </div>
+        <div class="row">
+          <label class="field"><span class="lbl">Waybill no.</span><input id="waybill" placeholder="Same for the whole truck"></label>
+          <label class="field"><span class="lbl">Remarks</span><input id="notes" placeholder="Optional"></label>
+        </div>
+        <div class="row">
+          <label class="field"><span class="lbl">Received by</span><input id="receivedBy" placeholder="Your name"></label>
+          <label class="field"><span class="lbl">Witnessed by (audit)</span><input id="witness" placeholder="Auditor's name"></label>
+        </div>
+        <div class="btns"><button type="submit" class="primary" id="goBtn">Stamp &amp; save</button></div>
+        <div class="msg" id="msg" role="status"></div>
+        <div class="batch">
+          <span>Today: <b id="todayTxt">—</b></span>
+          <button type="button" class="link" id="newBtn">Start a new truck</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Stamped proof</h2>
+      <div class="preview" id="preview"><p>After you tap Stamp &amp; save, the photo shows here with the locomotive, litres, supplier, date, time, Oyingbo Station and a tamper fingerprint burned into a strip underneath.</p></div>
+      <div class="btns">
+        <button id="shareBtn" disabled>Send to WhatsApp…</button>
+        <button id="dlBtn" disabled>Save to phone</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="regView" hidden>
+    <div class="reghead">
+      <h2>Delivery register</h2>
+      <div class="btns"><select id="month" aria-label="Month"></select><button type="button" id="csvBtn">Export CSV</button></div>
+    </div>
+    <div class="totals" id="totals"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Photo</th><th>Date / time</th><th>Loco</th><th class="num">Litres</th><th>Supplier</th><th>Waybill</th><th>Received / witness</th><th>Record · fingerprint</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="who">Records are write-once: once saved, a delivery and its photo cannot be edited or deleted. <button type="button" class="link" id="signOut">Sign out of this phone</button></p>
+  </section>
+</div>
+
+<dialog id="zoom"><img id="zoomImg" alt="Stamped delivery photo"><button id="zoomClose">Close</button></dialog>
+
+<script>
+const STATION="Oyingbo Station";
+const LOCOS=["43010","43040","43184","43304"];
+const SUPPLIERS=["HIRCON ENGINEERING","STRONG TOWER"];
+const LITRES=["3750","5000"];
+const $=id=>document.getElementById(id);
+let records=[], pending=[], current=null, photoFile=null, busy=false, PIN="";
+
+/* ---------- helpers ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const lagos=d=>new Date(new Date(d).toLocaleString("en-US",{timeZone:"Africa/Lagos"}));
+const dayKey=d=>{const l=lagos(d);return l.getFullYear()+"-"+pad(l.getMonth()+1)+"-"+pad(l.getDate())};
+const monthKey=d=>dayKey(d).slice(0,7);
+const fmtDate=d=>new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric",timeZone:"Africa/Lagos"});
+const fmtTime=d=>new Date(d).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"Africa/Lagos"});
+const num=n=>Number(n).toLocaleString("en-GB");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pick=name=>{const r=document.querySelector(`input[name="${name}"]:checked`);return r?r.value:""};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+function msg(t,cls){$("msg").textContent=t;$("msg").className="msg "+(cls||"")}
+function chips(el,name,vals,labelFn){$(el).innerHTML=[...vals,"Other"].map(v=>`<label><input type="radio" name="${name}" value="${esc(v)}"><span>${labelFn?labelFn(v):esc(v)}</span></label>`).join("")}
+function setChip(name,v){const r=[...document.querySelectorAll(`input[name="${name}"]`)].find(i=>i.value===v);if(r){r.checked=true;return true}return false}
+function setStatus(ok,t){$("status").innerHTML=`Register: <b class="${ok?"":"off"}">${esc(t)}</b>`}
+const api=(path,opt={})=>fetch(path,{...opt,headers:{...(opt.headers||{}),"x-pin":PIN}});
+
+/* ---------- sign-in gate ---------- */
+async function checkPin(pin){const r=await fetch("/api/check",{headers:{"x-pin":pin}});return r.status}
+$("gateForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const pin=$("gPin").value.trim(), name=$("gName").value.trim();
+  if(!pin){$("gMsg").textContent="Enter the station PIN.";$("gMsg").className="msg err";return}
+  if(!name){$("gMsg").textContent="Enter your name.";$("gMsg").className="msg err";return}
+  $("gBtn").disabled=true;$("gMsg").textContent="Checking…";$("gMsg").className="msg";
+  try{
+    const st=await checkPin(pin);
+    if(st===401){$("gMsg").textContent="That PIN is wrong. Ask the Maintenance Officer for the station PIN.";$("gMsg").className="msg err";return}
+    if(st!==200)throw 0;
+    ls.set("fdp-pin",pin);const p=ls.get("fdp-prefs",{});p.receivedBy=name;ls.set("fdp-prefs",p);
+    start();
+  }catch(err){$("gMsg").textContent="No connection. Connect to the internet for this first sign-in.";$("gMsg").className="msg err"}
+  finally{$("gBtn").disabled=false}
+});
+$("signOut").addEventListener("click",()=>{ls.del("fdp-pin");location.reload()});
+
+/* ---------- tabs ---------- */
+function tab(which){
+  const reg=which==="reg";
+  $("tabLog").setAttribute("aria-selected",String(!reg));$("tabReg").setAttribute("aria-selected",String(reg));
+  $("logView").hidden=reg;$("regView").hidden=!reg;
+  if(reg)loadRegister();
+}
+$("tabLog").addEventListener("click",()=>tab("log"));
+$("tabReg").addEventListener("click",()=>tab("reg"));
+
+/* ---------- controls ---------- */
+chips("locos","loco",LOCOS,v=>`${esc(v)}<span class="done" data-done="${esc(v)}"></span>`);
+chips("litreChips","litre",LITRES,v=>v==="Other"?"Other":num(v)+" L");
+chips("suppliers","supplier",SUPPLIERS,v=>v==="HIRCON ENGINEERING"?"HIRCON":esc(v));
+$("locos").addEventListener("change",()=>{$("locoOther").hidden=pick("loco")!=="Other";if(pick("loco")==="Other")$("locoOther").focus()});
+$("litreChips").addEventListener("change",()=>{$("litres").hidden=pick("litre")!=="Other";if(pick("litre")==="Other")$("litres").focus()});
+$("suppliers").addEventListener("change",()=>{$("supplierOther").hidden=pick("supplier")!=="Other";if(pick("supplier")==="Other")$("supplierOther").focus()});
+function savePrefs(){ls.set("fdp-prefs",{supplier:pick("supplier"),supplierOther:$("supplierOther").value,litres:pick("litre"),litresOther:$("litres").value,waybill:$("waybill").value,receivedBy:$("receivedBy").value,witness:$("witness").value,day:dayKey(Date.now())})}
+function restore(){
+  const p=ls.get("fdp-prefs",{});
+  setChip("litre",p.litres||"3750"); if(p.litres==="Other"){$("litres").hidden=false;$("litres").value=p.litresOther||""}
+  setChip("supplier",p.supplier||SUPPLIERS[0]); if(p.supplier==="Other"){$("supplierOther").hidden=false;$("supplierOther").value=p.supplierOther||""}
+  $("receivedBy").value=p.receivedBy||"";
+  if(p.day===dayKey(Date.now())){$("waybill").value=p.waybill||"";$("witness").value=p.witness||""}
+  setChip("loco",LOCOS[0]);
+}
+function resetPhoto(){$("photo").value="";photoFile=null;$("shotBox").classList.remove("has");$("shotHead").textContent="Take photo";$("shotTxt").textContent="Opens the camera. Get the loco number and the meter reading in frame."}
+$("photo").addEventListener("change",e=>{
+  photoFile=e.target.files[0]||null;
+  if(!photoFile)return resetPhoto();
+  $("shotBox").classList.add("has");$("shotHead").textContent="Photo ready ✓";
+  $("shotTxt").textContent=`Taken ${fmtDate(photoFile.lastModified)} at ${fmtTime(photoFile.lastModified)} · tap to retake`;
+});
+$("newBtn").addEventListener("click",()=>{$("waybill").value="";$("witness").value="";$("notes").value="";setChip("loco",nextLoco()||LOCOS[0]);savePrefs();msg("New truck started. Enter its waybill number.");$("waybill").focus()});
+
+/* ---------- stamping ---------- */
+async function sha(buf){try{const h=await crypto.subtle.digest("SHA-256",buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,16).toUpperCase()}catch(e){return "UNAVAILABLE"}}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),1000)};i.onerror=rej;i.src=u})}
+function fitText(x,t,X,Y,maxW){let s=t;while(x.measureText(s).width>maxW&&s.length>4)s=s.slice(0,-2);if(s!==t)s=s.slice(0,-1)+"…";x.fillText(s,X,Y)}
+async function stamp(file,r){
+  try{await document.fonts.ready}catch(e){}
+  const img=await loadImg(file);
+  const s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
+  const W=Math.round(img.naturalWidth*s),H=Math.round(img.naturalHeight*s),u=W/1000,P=Math.round(310*u);
+  const c=document.createElement("canvas");c.width=W;c.height=H+P;const x=c.getContext("2d");
+  x.drawImage(img,0,0,W,H);
+  x.fillStyle="#101820";x.fillRect(0,H,W,P);
+  const bar=Math.max(4,6*u);x.fillStyle="#f0a52a";x.fillRect(0,H,W,bar);
+  const pd=28*u,top=H+bar;x.textBaseline="top";
+  x.fillStyle="#93a1ad";x.font=`600 ${15*u}px Barlow, Arial, sans-serif`;
+  fitText(x,"LAMATA · LRMT RED LINE · "+STATION.toUpperCase()+" · DIESEL DELIVERY PROOF",pd,top+18*u,W-2*pd);
+  x.fillStyle="#ffffff";x.font=`700 ${92*u}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
+  fitText(x,"LOCO "+r.loco,pd,top+44*u,W*0.48-pd);
+  x.fillStyle="#f0a52a";x.font=`700 ${64*u}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
+  fitText(x,num(r.litres)+" LITRES",pd,top+142*u,W*0.48-pd);
+  const cx=W*0.52;
+  const lines=[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["SUPPLIER",r.supplier],["WAYBILL",r.waybill||"—"],["RECEIVED",r.receivedBy||"—"],["WITNESS",r.witness||"—"]];
+  const step=(P-80*u)/lines.length;
+  lines.forEach(([k,v],i)=>{const y=top+40*u+i*step;
+    x.fillStyle="#93a1ad";x.font=`500 ${14*u}px "IBM Plex Mono",Menlo,monospace`;x.fillText(k,cx,y+5*u);
+    x.fillStyle="#ffffff";x.font=`600 ${Math.min(24*u,step*0.82)}px Barlow, Arial, sans-serif`;fitText(x,String(v),cx+118*u,y,W-pd-(cx+118*u))});
+  x.fillStyle="#6f7d89";x.font=`500 ${13*u}px "IBM Plex Mono",Menlo,monospace`;
+  fitText(x,`REC ${r.id}  ·  PHOTO SHA-256 ${r.fingerprint}  ·  STAMPED ${fmtDate(r.stampedAt)} ${fmtTime(r.stampedAt)}`+(r.notes?`  ·  ${r.notes}`:""),pd,H+P-30*u,W-2*pd);
+  return await new Promise(res=>c.toBlob(res,"image/jpeg",0.88));
+}
+
+/* ---------- offline queue (IndexedDB on this phone) ---------- */
+let idbP=null;const memQ=new Map();
+function idb(){if(!idbP)idbP=new Promise((res,rej)=>{try{const q=indexedDB.open("fdp",1);q.onupgradeneeded=()=>q.result.createObjectStore("q",{keyPath:"id"});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}}).catch(()=>null);return idbP}
+async function qOp(mode,fn){const d=await idb();if(!d)return null;return new Promise((res,rej)=>{const t=d.transaction("q",mode);const r=fn(t.objectStore("q"));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}
+async function qPut(item){try{if(await idb()){await qOp("readwrite",s=>s.put(item));return true}}catch(e){}memQ.set(item.id,item);return false}
+async function qDel(id){memQ.delete(id);try{await qOp("readwrite",s=>s.delete(id))}catch(e){}}
+async function qAll(){let a=[];try{a=(await qOp("readonly",s=>s.getAll()))||[]}catch(e){}const ids=new Set(a.map(i=>i.id));memQ.forEach((v,k)=>{if(!ids.has(k))a.push(v)});return a}
+async function refreshPending(){pending=(await qAll()).map(i=>({...i.rec,queued:true}));$("qstatus").textContent=pending.length?`${pending.length} waiting to upload`:"";render()}
+async function upload(rec,blob){
+  const fd=new FormData();fd.append("meta",JSON.stringify(rec));fd.append("photo",blob,rec.id+".jpg");
+  const r=await api("/api/deliveries",{method:"POST",body:fd});
+  if(r.status===401){const e=new Error("pin");e.code="pin";throw e}
+  if(!r.ok){const e=new Error("server");e.code="server";throw e}
+}
+let flushing=false;
+async function flush(){
+  if(flushing||!navigator.onLine||!PIN)return;flushing=true;let any=false;
+  try{for(const it of await qAll()){try{await upload(it.rec,it.blob);await qDel(it.id);any=true}catch(e){break}}}
+  finally{flushing=false;await refreshPending();if(any)loadRegister()}
+}
+
+/* ---------- main action ---------- */
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();if(busy)return;
+  let loco=pick("loco");if(loco==="Other")loco=$("locoOther").value.trim();
+  let supplier=pick("supplier");if(supplier==="Other")supplier=$("supplierOther").value.trim();
+  const litres=parseFloat(String(pick("litre")==="Other"?$("litres").value:pick("litre")).replace(/,/g,""));
+  if(!photoFile)return msg("Take the photo first.","err");
+  if(!loco)return msg("Choose the locomotive.","err");
+  if(!(litres>0))return msg("Enter the litres as a number, e.g. 3750.","err");
+  if(!supplier)return msg("Choose the supplier.","err");
+  busy=true;$("goBtn").disabled=true;msg("Stamping…");savePrefs();
+  try{
+    const captured=new Date(photoFile.lastModified||Date.now()),now=new Date(),l=lagos(captured);
+    const fp=await sha(await photoFile.arrayBuffer());
+    const id=`FD-${String(l.getFullYear()).slice(2)}${pad(l.getMonth()+1)}${pad(l.getDate())}-${pad(l.getHours())}${pad(l.getMinutes())}-${loco.replace(/[^A-Za-z0-9]/g,"")}-${Math.random().toString(36).slice(2,5).toUpperCase()}`;
+    const rec={id,loco,supplier,litres,station:STATION,waybill:$("waybill").value.trim(),receivedBy:$("receivedBy").value.trim(),witness:$("witness").value.trim(),notes:$("notes").value.trim(),capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
+    let blob;try{blob=await stamp(photoFile,rec)}catch(err){throw new Error("img")}
+    if(current)URL.revokeObjectURL(current.url);
+    current={blob,url:URL.createObjectURL(blob),rec};
+    $("preview").innerHTML=`<img src="${current.url}" alt="Stamped delivery photo for locomotive ${esc(loco)}">`;
+    $("dlBtn").disabled=false;$("shareBtn").disabled=false;
+    msg("Saving…");
+    let saved=false;
+    if(navigator.onLine){try{await upload(rec,blob);saved=true}catch(err){if(err.code==="pin"){msg("The station PIN has changed. Sign out and sign in again with the new PIN.","err");}}}
+    if(!saved){const durable=await qPut({id,rec,blob});await refreshPending();if(!durable)msg("No connection and this phone can't store it offline. Tap Save to phone now; keep the app open and it will upload when signal returns.","err")}
+    resetPhoto();$("notes").value="";if(pick("loco")==="Other")$("locoOther").value="";
+    if(saved)records.push(rec);
+    render();
+    const nx=nextLoco();if(nx)setChip("loco",nx);
+    const nextTxt=nx?` Next: ${nx}, take its photo.`:" All four locomotives are logged for today.";
+    if(saved)msg(`${loco} saved.${nextTxt}`,"ok");
+    else if(!$("msg").classList.contains("err"))msg(`No signal. ${loco} is kept on this phone and uploads by itself when signal returns.${nextTxt}`,"ok");
+    if(saved)loadRegister();
+  }catch(err){msg(err.message==="img"?"Could not read that photo. Retake it.":"Something went wrong. Try again.","err")}
+  finally{busy=false;$("goBtn").disabled=false}
+});
+
+$("dlBtn").addEventListener("click",()=>{
+  if(!current)return;
+  const a=document.createElement("a");a.href=current.url;a.download=current.rec.id+".jpg";document.body.appendChild(a);a.click();a.remove();
+  msg("Photo saved to the phone's downloads.","ok");
+});
+$("shareBtn").addEventListener("click",async()=>{
+  if(!current)return;
+  const file=new File([current.blob],current.rec.id+".jpg",{type:"image/jpeg"});
+  const r=current.rec;
+  const text=`Diesel delivery · ${STATION}\nLoco ${r.loco} · ${num(r.litres)} L · ${r.supplier}\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)} · Waybill ${r.waybill||"—"}\nRef ${r.id}`;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text});}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to phone, then send it from your gallery.","err")}
+  }else{$("dlBtn").click();msg("This phone can't share directly. The photo was saved; send it from your gallery.")}
+});
+
+/* ---------- register ---------- */
+function todays(){const t=dayKey(Date.now());return [...records,...pending.filter(p=>!records.some(r=>r.id===p.id))].filter(r=>dayKey(r.capturedAt)===t)}
+function nextLoco(){const done=new Set(todays().map(r=>r.loco));return LOCOS.find(l=>!done.has(l))}
+async function loadRegister(){
+  if(!PIN)return;
+  try{
+    const r=await api("/api/deliveries");
+    if(r.status===401){setStatus(false,"PIN changed — sign out and back in");return}
+    const offline=r.headers.get("x-offline")==="1";
+    records=await r.json();
+    setStatus(!offline&&navigator.onLine,offline||!navigator.onLine?"offline · showing last copy":"live");
+    render();
+    const sel=pick("loco");if(!photoFile&&LOCOS.includes(sel)&&todays().some(x=>x.loco===sel)){const nx=nextLoco();if(nx)setChip("loco",nx)}
+  }catch(e){setStatus(false,"offline · saving on this phone")}
+}
+function visibleRows(){
+  const list=[...records,...pending.filter(p=>!records.some(r=>r.id===p.id))];
+  const months=[...new Set(list.map(r=>monthKey(r.capturedAt)))].sort().reverse();
+  if(!months.length)months.push(monthKey(Date.now()));
+  const cur=months.includes($("month").value)?$("month").value:months[0];
+  return {list,months,cur,rows:list.filter(r=>monthKey(r.capturedAt)===cur).sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))};
+}
+function render(){
+  const tl=todays(),done={};tl.forEach(r=>done[r.loco]=(done[r.loco]||0)+Number(r.litres||0));
+  document.querySelectorAll("[data-done]").forEach(el=>{const l=el.dataset.done;el.textContent=done[l]?"✓ "+num(done[l])+" L":""});
+  const tot=tl.reduce((a,r)=>a+Number(r.litres||0),0);
+  $("todayTxt").textContent=tl.length?`${tl.length} of ${LOCOS.length} locos · ${num(tot)} L`:"nothing logged yet";
+  const {months,cur,rows}=visibleRows();
+  $("month").innerHTML=months.map(m=>{const [y,mo]=m.split("-");return `<option value="${m}" ${m===cur?"selected":""}>${new Date(y,mo-1).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</option>`}).join("");
+  const by={};rows.forEach(r=>by[r.loco]=(by[r.loco]||0)+Number(r.litres||0));
+  const all=rows.reduce((a,r)=>a+Number(r.litres||0),0);
+  $("totals").innerHTML=Object.keys(by).sort().map(l=>`<div class="tot"><b>${esc(l)}</b><span>${num(by[l])} L</span></div>`).join("")+`<div class="tot"><b>Month total · ${rows.length} deliveries</b><span>${num(all)} L</span></div>`;
+  $("rows").innerHTML=rows.length?rows.map(r=>{
+    const src=r.queued?"":`/api/photo/${encodeURIComponent(r.id)}?pin=${encodeURIComponent(PIN)}`;
+    const img=src?`<img src="${esc(src)}" alt="Delivery photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
+    const tag=r.queued?'<span class="tag q">Waiting to upload</span>':"";
+    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td><span class="loco">${esc(r.loco)}</span>${tag}</td><td class="num">${num(r.litres)}</td><td>${esc(r.supplier)}</td><td>${esc(r.waybill||"—")}</td><td>${esc(r.receivedBy||"—")}<br><span style="color:var(--muted)">${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
+  }).join(""):`<tr><td colspan="8" class="empty">No deliveries recorded this month. They appear here as soon as they are saved.</td></tr>`;
+}
+$("month").addEventListener("change",render);
+$("rows").addEventListener("click",e=>{const z=e.target.dataset&&e.target.dataset.zoom;if(z){$("zoomImg").src=z;$("zoom").showModal()}});
+$("zoomClose").addEventListener("click",()=>$("zoom").close());
+$("zoom").addEventListener("click",e=>{if(e.target===$("zoom"))$("zoom").close()});
+$("csvBtn").addEventListener("click",()=>{
+  const {rows,cur}=visibleRows();
+  const head=["Record ID","Date","Time (WAT)","Station","Locomotive","Litres","Supplier","Waybill","Received by","Witnessed by","Remarks","Photo fingerprint","Status"];
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station||STATION,r.loco,r.litres,r.supplier,r.waybill,r.receivedBy,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
+  const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`oyingbo-fuel-deliveries-${cur}.csv`;document.body.appendChild(a);a.click();a.remove();
+});
+
+/* ---------- install prompt ---------- */
+let deferred=null;
+const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;if(!standalone){$("installTip").hidden=false;$("installBtn").hidden=false}});
+$("installBtn").addEventListener("click",async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$("installTip").hidden=true});
+if(!standalone&&/iphone|ipad/i.test(navigator.userAgent)){$("installTip").hidden=false;$("installTxt").textContent="To install: tap the Share icon in Safari, then “Add to Home Screen”."}
+
+/* ---------- start ---------- */
+function start(){
+  PIN=ls.get("fdp-pin","");
+  if(!PIN){$("gate").hidden=false;$("app").hidden=true;const p=ls.get("fdp-prefs",{});$("gName").value=p.receivedBy||"";return}
+  $("gate").hidden=true;$("app").hidden=false;
+  restore();render();refreshPending();loadRegister();flush();
+}
+window.addEventListener("online",()=>{setStatus(true,"back online · syncing");flush();loadRegister()});
+window.addEventListener("offline",()=>setStatus(false,"offline · saving on this phone"));
+setInterval(flush,30000);
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
+start();
+</script>
+</body>
+</html>
