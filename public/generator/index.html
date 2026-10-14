@@ -236,7 +236,7 @@ button.primary{background:var(--gen);border-color:var(--gen);color:var(--gen-ink
       <div class="preview" id="preview"><p>After you tap Stamp &amp; save, the photo shows here with the station, litres, date, time, supplier and a tamper fingerprint burned into a strip underneath.</p></div>
       <div class="btns">
         <button id="shareBtn" disabled>Send to WhatsApp…</button>
-        <button id="dlBtn" disabled>Save to phone</button>
+        <button id="dlBtn" disabled>Save to gallery</button>
       </div>
     </div>
   </section>
@@ -466,16 +466,29 @@ $("f").addEventListener("submit",async e=>{
     const what=`${station} (${num(litres)} L)`;
     if(saved)msg(`${what} saved.`,"ok");
     else if(durable)msg(`No signal. ${what} is kept on this phone and uploads by itself when signal returns.`,"ok");
-    else msg("No connection and this phone can't store it offline. Tap Save to phone now; keep the app open and it will upload when signal returns.","err");
+    else msg("No connection and this phone can't store it offline. Tap Save to gallery now; keep the app open and it will upload when signal returns.","err");
     if(saved)loadRegister();
   }catch(err){msg(err.message==="img"?"Could not read that photo. Retake it.":"Something went wrong. Try again.","err")}
   finally{busy=false;$("goBtn").disabled=false}
 });
 
-$("dlBtn").addEventListener("click",()=>{
-  if(!current)return;
+function downloadPhoto(){
   const a=document.createElement("a");a.href=current.url;a.download=current.rec.id+".jpg";document.body.appendChild(a);a.click();a.remove();
-  msg("Photo saved to the phone's downloads.","ok");
+}
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+$("dlBtn").addEventListener("click",async()=>{
+  if(!current)return;
+  const file=new File([current.blob],current.rec.id+".jpg",{type:"image/jpeg"});
+  // Image-only share opens the phone's save sheet: "Save Image" (iPhone) / "Gallery" or "Photos" (Android).
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file]});
+      msg(isIOS?"If you tapped “Save Image”, it's now in Photos.":"If you chose Gallery or Photos, it's now in your gallery.","ok");
+      return;
+    }catch(e){if(e.name==="AbortError"){msg("Not saved. Tap Save to gallery again and choose “Save Image” (iPhone) or Gallery/Photos (Android).");return}}
+  }
+  downloadPhoto();
+  msg("Saved to the phone's Downloads. In the Gallery app, open the Downloads album to see it.","ok");
 });
 $("shareBtn").addEventListener("click",async()=>{
   if(!current)return;
@@ -483,8 +496,8 @@ $("shareBtn").addEventListener("click",async()=>{
   const r=current.rec;
   const text=`Generator diesel · ${r.station} Station\n${num(r.litres)} L${r.generator?" · "+r.generator:""}${r.hourMeter?" · "+r.hourMeter+" h":""}\n${r.supplier} · Waybill ${r.waybill||"—"}\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)}\nRef ${r.id}`;
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],text})}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to phone, then send it from your gallery.","err")}
-  }else{$("dlBtn").click();msg("This phone can't share directly. The photo was saved; send it from your gallery.")}
+    try{await navigator.share({files:[file],text})}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to gallery, then send it from your gallery.","err")}
+  }else{downloadPhoto();msg("This phone can't share directly. The photo was saved to Downloads; send it from your gallery.")}
 });
 
 /* ---------- register ---------- */
