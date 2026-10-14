@@ -1,0 +1,14 @@
+{
+  "name": "Generator Fuel Log",
+  "short_name": "Gen Fuel",
+  "description": "Stamped photo proof of diesel delivered to station generators across the LRMT Red Line, with its own register.",
+  "start_url": "/generator/",
+  "scope": "/generator/",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    { "src": "/generator/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/generator/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

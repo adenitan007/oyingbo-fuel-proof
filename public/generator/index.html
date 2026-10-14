@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101820">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gen Fuel">
+<link rel="manifest" href="/generator/manifest.webmanifest">
+<link rel="icon" href="/generator/icon-192.png">
+<link rel="apple-touch-icon" href="/generator/icon-192.png">
+<title>Generator Fuel Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+[hidden]{display:none!important}
+
+/* Layout: phone-first single flow (photo → taps → one button), stamped proof beside it on wide screens, shared register below. */
+:root{
+  --bg:#eef1f3; --panel:#ffffff; --ink:#16202a; --muted:#5b6873; --line:#d3d9de;
+  --accent:#d98a0b; --accent-ink:#1a1204; --rail:#1f3a52; --rail-ink:#ffffff; --ok:#2e7d4f; --gen:#2e8a57; --gen-ink:#ffffff; --warn:#b4471b;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --panel:#17212a; --ink:#e6ebef; --muted:#93a1ad; --line:#2a3743;
+  --accent:#f0a52a; --accent-ink:#1a1204; --rail:#8fb6d6; --rail-ink:#0f151b; --ok:#6cc391; --gen:#6cc391; --gen-ink:#0f151b; --warn:#ef8a5c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --panel:#17212a; --ink:#e6ebef; --muted:#93a1ad; --line:#2a3743;
+  --accent:#f0a52a; --accent-ink:#1a1204; --rail:#8fb6d6; --rail-ink:#0f151b; --ok:#6cc391; --gen:#6cc391; --gen-ink:#0f151b; --warn:#ef8a5c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 64px;padding-inline:16px;display:grid;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px;border-bottom:3px solid var(--rail);padding-bottom:14px}
+.eyebrow{font:600 12px/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(30px,5vw,44px)/1 var(--display);margin:6px 0 0;letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--accent)}
+h2{font:700 22px/1.1 var(--display);margin:0;letter-spacing:.02em;text-transform:uppercase}
+.status{font:500 13px/1.4 var(--mono);color:var(--muted);display:grid;gap:2px;justify-items:end}
+.status b{color:var(--ok);font-weight:500}
+.status b.off{color:var(--warn)}
+.bench{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+@media (max-width:860px){.bench{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:16px;min-width:0}
+form{display:grid;gap:16px}
+.field{display:grid;gap:6px;min-width:0}
+.lbl{font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row{grid-template-columns:1fr}}
+input{font:500 16px/1.3 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:11px;width:100%;min-width:0}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{position:relative;flex:1 1 auto}
+.chips input{position:absolute;opacity:0;pointer-events:none;width:1px}
+.chips label>span{display:block;text-align:center;padding:11px 10px;border:1px solid var(--line);border-radius:4px;font:700 18px/1 var(--display);letter-spacing:.03em;background:var(--bg);cursor:pointer;white-space:nowrap}
+.chips input:checked+span{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
+.chips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.chips .done{padding:0;border:0;background:none;min-height:1em;font:600 11px/1 var(--body);letter-spacing:.06em;display:block;margin-top:4px;color:var(--ok)}
+.chips input:checked+span .done{color:inherit;opacity:.8}
+.shot{border:2px dashed var(--accent);border-radius:6px;padding:20px 16px;text-align:center;cursor:pointer;display:grid;gap:4px;position:relative;background:var(--bg)}
+.shot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.shot strong{font:700 24px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.shot small{color:var(--muted);font-size:13px}
+.shot.has{border-style:solid;border-color:var(--ok)}
+.shot.has strong{color:var(--ok)}
+.shot:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button{font:700 17px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:14px 18px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:1 1 220px;font-size:20px;padding:16px}
+button.link{background:none;border:none;padding:4px 0;font:600 14px/1.2 var(--body);letter-spacing:0;text-transform:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.batch{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.batch b{color:var(--ink)}
+.preview{background:#0b1015;border-radius:4px;min-height:200px;display:grid;place-items:center;overflow:hidden}
+.preview img{display:block;width:100%;height:auto}
+.preview p{color:#93a1ad;font-size:14px;padding:24px;text-align:center;max-width:38ch;margin:0}
+.msg{font-size:15px;color:var(--muted);min-height:1.5em}
+.msg.err{color:var(--warn)}.msg.ok{color:var(--ok)}
+.totals{display:flex;flex-wrap:wrap;gap:8px}
+.tot{border:1px solid var(--line);border-radius:4px;padding:8px 12px;display:grid;gap:2px;min-width:110px}
+.tot b{font:700 18px/1 var(--display);letter-spacing:.03em}
+.tot span{font:500 14px/1.2 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.reghead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+select{font:500 15px/1.2 var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:9px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.mono{font:12px/1.4 var(--mono);color:var(--muted)}
+td .loco{font:700 18px/1 var(--display)}
+td img{width:72px;height:54px;object-fit:cover;border-radius:3px;display:block;cursor:zoom-in;background:var(--bg)}
+.thumb0{width:72px;height:54px;border-radius:3px;background:var(--bg)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.tag{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;border:1px solid currentColor;border-radius:3px;padding:2px 5px;margin-left:6px;white-space:nowrap}
+.tag.ex{color:var(--warn)}.tag.q{color:var(--accent)}
+dialog{border:none;border-radius:6px;padding:0;max-width:min(96vw,1100px);background:#0b1015}
+dialog img{display:block;max-width:100%;max-height:86vh}
+dialog::backdrop{background:rgba(5,8,12,.8)}
+dialog button{position:absolute;top:8px;right:8px}
+
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
+.tabs{display:flex;gap:6px}
+.tabs button{padding:10px 16px;font-size:16px}
+.tabs button[aria-selected="true"]{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
+.gate{max-width:420px;margin:8vh auto 0;padding-inline:16px;display:grid;gap:16px}
+.gate .card{gap:14px}
+.gate p{margin:0;color:var(--muted)}
+.tip{font-size:14px;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:6px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.who{font-size:13px;color:var(--muted)}
+
+.day{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:12px 14px;display:grid;gap:10px}
+.dayhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.daysum{font-size:14px;color:var(--ink);line-height:1.45;min-width:0}
+.daysum b{font-weight:600}
+.daysum .muted{color:var(--muted)}
+.day .row{margin-top:2px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.modes button{font-size:18px;padding:12px}
+.modes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.decant-flow{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.lbl .hint{text-transform:none;letter-spacing:0;font-weight:500}
+.sumtable{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+.sumtable th,.sumtable td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.sumtable td{font-variant-numeric:tabular-nums}
+.sumtable tr.total td{font-weight:600;border-top:2px solid var(--line)}
+.type{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;border-radius:3px;padding:3px 6px;white-space:nowrap}
+.type.del{background:var(--rail);color:var(--rail-ink)}
+.type.dec{background:var(--accent);color:var(--accent-ink)}
+
+h1 span{color:var(--gen)}
+.shot{border-color:var(--gen)}
+button.primary{background:var(--gen);border-color:var(--gen);color:var(--gen-ink)}
+.gate .eyebrow,.wrap .eyebrow{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <div>
+    <div class="eyebrow">LAMATA · LRMT Red Line · Station generators</div>
+    <h1>Generator Fuel <span>Log</span></h1>
+  </div>
+  <form class="card" id="gateForm" novalidate>
+    <p>Enter the generator log PIN and your name. You only do this once on this phone.</p>
+    <label class="field"><span class="lbl">Generator log PIN</span><input id="gPin" inputmode="numeric" autocomplete="one-time-code" placeholder="6 digits"></label>
+    <label class="field"><span class="lbl">Your name</span><input id="gName" autocomplete="name" placeholder="As it should appear on the stamp"></label>
+    <button class="primary" type="submit" id="gBtn">Continue</button>
+    <div class="msg" id="gMsg" role="status"></div>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <div class="eyebrow">LAMATA · LRMT Red Line · Station generators</div>
+      <h1>Generator Fuel <span>Log</span></h1>
+    </div>
+    <div class="status"><span id="status">Register: <b class="off">connecting…</b></span><span id="qstatus"></span></div>
+  </header>
+
+  <div class="tip" id="installTip" hidden>
+    <span id="installTxt">Add this app to your home screen so it opens like a normal app, even with no signal.</span>
+    <button type="button" id="installBtn" hidden>Install</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" id="tabLog">Log</button>
+    <button role="tab" aria-selected="false" id="tabReg">Register</button>
+  </div>
+
+  <section class="bench" id="logView">
+    <div class="card">
+      <div class="day" id="dayBox">
+        <div class="dayhead">
+          <span class="lbl" id="dayTitle">Today's details</span>
+          <button type="button" class="link" id="dayToggle">Edit</button>
+        </div>
+        <div class="daysum" id="daySum"></div>
+        <div id="dayForm" hidden>
+          <div class="field">
+            <span class="lbl">Supplier</span>
+            <div class="chips" id="suppliers" role="radiogroup" aria-label="Supplier"></div>
+            <input id="supplierOther" placeholder="Supplier name" hidden>
+          </div>
+          <div class="row">
+            <label class="field"><span class="lbl">Waybill no.</span><input id="waybill" placeholder="e.g. HE-0912"></label>
+            <label class="field"><span class="lbl">Logged by</span><input id="loggedBy" placeholder="Your name"></label>
+          </div>
+          <div class="row">
+            <label class="field"><span class="lbl">Witnessed by (audit)</span><input id="witness" placeholder="Auditor's name"></label>
+            <label class="field"><span class="lbl">Remarks</span><input id="notes" placeholder="Optional"></label>
+          </div>
+          <div class="btns"><button type="button" id="daySave">Use these for today</button></div>
+        </div>
+      </div>
+
+      <form id="f" novalidate>
+        <label class="shot" id="shotBox">
+          <input type="file" id="photo" accept="image/*" capture="environment">
+          <strong id="shotHead">Take photo</strong>
+          <small id="shotTxt">Opens the camera. Get the generator, its tank gauge or the dispensing meter in frame.</small>
+        </label>
+
+        <div class="field">
+          <span class="lbl">Station</span>
+          <div class="chips" id="stations" role="radiogroup" aria-label="Station"></div>
+          <input id="stationOther" placeholder="Station name" hidden>
+        </div>
+
+        <div class="field">
+          <span class="lbl">Litres</span>
+          <div class="chips" id="litreChips" role="radiogroup" aria-label="Litres"></div>
+          <input id="litres" inputmode="decimal" placeholder="Litres" hidden>
+        </div>
+
+        <div class="field">
+          <span class="lbl">Generator <span class="hint">(optional)</span></span>
+          <div class="chips" id="gens" role="radiogroup" aria-label="Generator"></div>
+          <input id="genOther" placeholder="Generator name or tag" hidden>
+        </div>
+
+        <div class="row">
+          <label class="field"><span class="lbl">Hour meter <span class="hint">(optional)</span></span><input id="hourMeter" inputmode="decimal" placeholder="e.g. 12450.6"></label>
+          <label class="field"><span class="lbl">Received at station by <span class="hint">(optional)</span></span><input id="stationReceiver" placeholder="Station staff name"></label>
+        </div>
+
+        <div class="btns"><button type="submit" class="primary" id="goBtn">Stamp &amp; save</button></div>
+        <div class="msg" id="msg" role="status"></div>
+        <div class="batch"><span>Today: <b id="todayTxt">—</b></span></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Stamped proof</h2>
+      <div class="preview" id="preview"><p>After you tap Stamp &amp; save, the photo shows here with the station, litres, date, time, supplier and a tamper fingerprint burned into a strip underneath.</p></div>
+      <div class="btns">
+        <button id="shareBtn" disabled>Send to WhatsApp…</button>
+        <button id="dlBtn" disabled>Save to phone</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="regView" hidden>
+    <div class="reghead">
+      <h2>Generator fuel register</h2>
+      <div class="btns"><select id="month" aria-label="Month"></select><button type="button" id="csvBtn">Export CSV</button></div>
+    </div>
+    <div class="tablewrap"><table class="sumtable" id="sumTable"></table></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Photo</th><th>Date / time</th><th>Station</th><th class="num">Litres</th><th>Generator · hours</th><th>Supplier · waybill</th><th>Logged / received / witness</th><th>Record · fingerprint</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="who">Records are write-once: once saved, an entry and its photo cannot be edited or deleted. <button type="button" class="link" id="signOut">Sign out of this phone</button></p>
+  </section>
+</div>
+
+<dialog id="zoom"><img id="zoomImg" alt="Stamped photo"><button id="zoomClose">Close</button></dialog>
+
+<script>
+const STATIONS=["Iju","Agege","Oyingbo","Mushin","Yaba","Ikeja","Oshodi"];
+const SUPPLIERS=["HIRCON ENGINEERING","STRONG TOWER"];
+const LITRES=["500","1000"];
+const GENS=["550 kVA","1100 kVA"];
+const API="/api/gen";
+const K={pin:"gen-pin",name:"gen-name",day:"gen-day",station:"gen-last-station"};
+const $=id=>document.getElementById(id);
+let records=[],pending=[],current=null,photoFile=null,busy=false,PIN="";
+
+/* ---------- helpers ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const lagos=d=>new Date(new Date(d).toLocaleString("en-US",{timeZone:"Africa/Lagos"}));
+const dayKey=d=>{const l=lagos(d);return l.getFullYear()+"-"+pad(l.getMonth()+1)+"-"+pad(l.getDate())};
+const monthKey=d=>dayKey(d).slice(0,7);
+const fmtDate=d=>new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric",timeZone:"Africa/Lagos"});
+const fmtTime=d=>new Date(d).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"Africa/Lagos"});
+const num=n=>Number(n).toLocaleString("en-GB");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pick=name=>{const r=document.querySelector(`input[name="${name}"]:checked`);return r?r.value:""};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+function msg(t,cls){$("msg").textContent=t;$("msg").className="msg "+(cls||"")}
+function chips(el,name,vals,labelFn,withOther=true){$(el).innerHTML=[...vals,...(withOther?["Other"]:[])].map(v=>`<label><input type="radio" name="${name}" value="${esc(v)}"><span>${labelFn?labelFn(v):esc(v)}</span></label>`).join("")}
+function setChip(name,v){const r=[...document.querySelectorAll(`input[name="${name}"]`)].find(i=>i.value===v);if(r){r.checked=true;return true}return false}
+function bindOther(group,name,input){$(group).addEventListener("change",()=>{const o=pick(name)==="Other";$(input).hidden=!o;if(o)$(input).focus()})}
+function chipVal(name,input){const v=pick(name);return v==="Other"?$(input).value.trim():v}
+function setStatus(ok,t){$("status").innerHTML=`Register: <b class="${ok?"":"off"}">${esc(t)}</b>`}
+const api=(path,opt={})=>fetch(API+path,{...opt,headers:{...(opt.headers||{}),"x-pin":PIN}});
+
+/* ---------- sign-in ---------- */
+async function checkPin(pin){
+  const ac=new AbortController();const t=setTimeout(()=>ac.abort(),15000);
+  try{const r=await fetch(API+"/check?t="+Date.now(),{headers:{"x-pin":pin},cache:"no-store",signal:ac.signal});return r.status}
+  catch(e){return e.name==="AbortError"?"timeout":"network"}
+  finally{clearTimeout(t)}
+}
+function gmsg(t){$("gMsg").textContent=t;$("gMsg").className="msg err"}
+$("gateForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const pin=$("gPin").value.replace(/\s+/g,""),name=$("gName").value.trim();
+  if(!pin)return gmsg("Enter the generator log PIN.");
+  if(!name)return gmsg("Enter your name.");
+  $("gBtn").disabled=true;$("gMsg").textContent="Checking…";$("gMsg").className="msg";
+  try{
+    const st=await checkPin(pin);
+    if(st==="timeout")return gmsg("The server took too long to answer (over 15 s). Check your data connection and try again.");
+    if(st==="network")return gmsg("Couldn't reach the server. Check your internet connection and try again.");
+    if(st===401)return gmsg("That PIN is wrong. This log uses its own PIN, not the locomotive one. Ask the Maintenance Officer.");
+    if(st!==200)return gmsg("The app's server isn't responding right now (code "+st+"). Try again in a minute.");
+    ls.set(K.pin,pin);ls.set(K.name,name);
+    $("gMsg").textContent="";window.scrollTo(0,0);start();
+  }catch(err){gmsg("Unexpected error: "+(err&&err.message||err))}
+  finally{$("gBtn").disabled=false}
+});
+$("signOut").addEventListener("click",()=>{ls.del(K.pin);location.reload()});
+
+/* ---------- tabs ---------- */
+function tab(which){
+  const reg=which==="reg";
+  $("tabLog").setAttribute("aria-selected",String(!reg));$("tabReg").setAttribute("aria-selected",String(reg));
+  $("logView").hidden=reg;$("regView").hidden=!reg;
+  if(reg)loadRegister();
+}
+$("tabLog").addEventListener("click",()=>tab("log"));
+$("tabReg").addEventListener("click",()=>tab("reg"));
+
+/* ---------- controls ---------- */
+chips("stations","station",STATIONS,v=>`${esc(v)}<span class="done" data-done="${esc(v)}"></span>`);
+chips("litreChips","litre",LITRES,v=>v==="Other"?"Other":num(v)+" L");
+chips("gens","gen",GENS);
+chips("suppliers","supplier",SUPPLIERS,v=>v==="HIRCON ENGINEERING"?"HIRCON":esc(v));
+bindOther("stations","station","stationOther");bindOther("litreChips","litre","litres");
+bindOther("gens","gen","genOther");bindOther("suppliers","supplier","supplierOther");
+setChip("litre",LITRES[0]);
+// optional chip: tap again to clear
+let genWas="";
+$("gens").addEventListener("click",e=>{const i=e.target;if(i.tagName!=="INPUT")return;if(genWas===i.value){i.checked=false;genWas="";$("genOther").hidden=true}else genWas=i.value});
+
+/* ---------- day details ---------- */
+function getDay(){const d=ls.get(K.day,{});return d.day===dayKey(Date.now())?d:null}
+function supplierName(d){return d.supplier==="Other"?d.supplierOther:d.supplier}
+function fillDayForm(){
+  const d=getDay()||{},last=ls.get(K.day,{});
+  setChip("supplier",d.supplier||last.supplier||SUPPLIERS[0]);
+  if((d.supplier||last.supplier)==="Other"){$("supplierOther").hidden=false;$("supplierOther").value=d.supplierOther||last.supplierOther||""}
+  $("waybill").value=d.waybill||"";$("witness").value=d.witness||"";$("notes").value=d.notes||"";
+  $("loggedBy").value=d.loggedBy||last.loggedBy||ls.get(K.name,"");
+}
+function readDayForm(){return{day:dayKey(Date.now()),supplier:pick("supplier"),supplierOther:$("supplierOther").value.trim(),waybill:$("waybill").value.trim(),loggedBy:$("loggedBy").value.trim(),witness:$("witness").value.trim(),notes:$("notes").value.trim()}}
+function renderDay(){
+  const d=getDay();
+  $("dayTitle").textContent="Details for "+fmtDate(Date.now());
+  if(!d){$("dayForm").hidden=false;$("daySum").hidden=true;$("dayToggle").hidden=true;return}
+  $("dayForm").hidden=true;$("daySum").hidden=false;$("dayToggle").hidden=false;$("dayToggle").textContent="Edit";
+  $("daySum").innerHTML=[`<b>${esc(supplierName(d)||"—")}</b>`,`Waybill <b>${esc(d.waybill||"—")}</b>`,`Logged by <b>${esc(d.loggedBy||"—")}</b>`,`Witness <b>${esc(d.witness||"—")}</b>`].join(" · ")+(d.notes?`<br><span class="muted">${esc(d.notes)}</span>`:"");
+}
+$("dayToggle").addEventListener("click",()=>{const open=$("dayForm").hidden;fillDayForm();$("dayForm").hidden=!open;$("daySum").hidden=open;$("dayToggle").textContent=open?"Cancel":"Edit"});
+$("daySave").addEventListener("click",()=>{
+  const d=readDayForm();
+  if(!supplierName(d))return msg("Choose the supplier for today.","err");
+  if(!d.loggedBy)return msg("Enter who is logging today.","err");
+  ls.set(K.day,d);renderDay();msg("Today's details saved. They'll be used for every entry until tomorrow.","ok");
+});
+function ensureDay(){if(getDay())return getDay();const d=readDayForm();if(!supplierName(d)||!d.loggedBy)return null;ls.set(K.day,d);renderDay();return d}
+
+function resetPhoto(){$("photo").value="";photoFile=null;$("shotBox").classList.remove("has");$("shotHead").textContent="Take photo";$("shotTxt").textContent="Opens the camera. Get the generator, its tank gauge or the dispensing meter in frame."}
+$("photo").addEventListener("change",e=>{
+  delete $("f").dataset.oldOk;
+  photoFile=e.target.files[0]||null;
+  if(!photoFile)return resetPhoto();
+  $("shotBox").classList.add("has");$("shotHead").textContent="Photo ready ✓";
+  $("shotTxt").textContent=`Taken ${fmtDate(photoFile.lastModified)} at ${fmtTime(photoFile.lastModified)} · tap to retake`;
+});
+
+/* ---------- stamping ---------- */
+async function sha(buf){try{const h=await crypto.subtle.digest("SHA-256",buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,16).toUpperCase()}catch(e){return "UNAVAILABLE"}}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),1000)};i.onerror=rej;i.src=u})}
+function fitBig(x,t,X,Y,maxW,size,weight,fam){let z=size;x.font=`${weight} ${z}px ${fam}`;while(x.measureText(t).width>maxW&&z>size*0.35){z-=size*0.04;x.font=`${weight} ${z}px ${fam}`}x.fillText(t,X,Y)}
+function fitText(x,t,X,Y,maxW){let s=t;while(x.measureText(s).width>maxW&&s.length>4)s=s.slice(0,-2);if(s!==t)s=s.slice(0,-1)+"…";x.fillText(s,X,Y)}
+async function stamp(file,r){
+  try{await document.fonts.ready}catch(e){}
+  const img=await loadImg(file);
+  const s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
+  const W=Math.round(img.naturalWidth*s),H=Math.round(img.naturalHeight*s),u=W/1000,P=Math.round(330*u);
+  const c=document.createElement("canvas");c.width=W;c.height=H+P;const x=c.getContext("2d");
+  x.drawImage(img,0,0,W,H);
+  x.fillStyle="#101820";x.fillRect(0,H,W,P);
+  const bar=Math.max(4,6*u);x.fillStyle="#6cc391";x.fillRect(0,H,W,bar);
+  const pd=28*u,top=H+bar;x.textBaseline="top";
+  x.fillStyle="#93a1ad";x.font=`600 ${15*u}px Barlow, Arial, sans-serif`;
+  fitText(x,"LAMATA · LRMT RED LINE · STATION GENERATOR FUEL PROOF",pd,top+18*u,W-2*pd);
+  const FAM='"Barlow Condensed","Arial Narrow",Arial,sans-serif',colW=W*0.50-pd;
+  x.fillStyle="#ffffff";fitBig(x,r.station.toUpperCase(),pd,top+48*u,colW,92*u,700,FAM);
+  x.fillStyle="#6cc391";fitBig(x,num(r.litres)+" LITRES",pd,top+150*u,colW,64*u,700,FAM);
+  x.fillStyle="#93a1ad";x.font=`600 ${20*u}px Barlow, Arial, sans-serif`;
+  fitText(x,"GENERATOR"+(r.generator?" · "+r.generator:""),pd,top+228*u,colW);
+  const cx=W*0.54;
+  const lines=[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",r.station+" Station"],["HOURS",r.hourMeter||"—"],["SUPPLIER",r.supplier],["WAYBILL",r.waybill||"—"],["RECEIVED",r.stationReceiver||r.loggedBy||"—"],["WITNESS",r.witness||"—"]];
+  const step=(P-80*u)/lines.length;
+  lines.forEach(([k,v],i)=>{const y=top+40*u+i*step;
+    x.fillStyle="#93a1ad";x.font=`500 ${14*u}px "IBM Plex Mono",Menlo,monospace`;x.fillText(k,cx,y+5*u);
+    x.fillStyle="#ffffff";x.font=`600 ${Math.min(24*u,step*0.82)}px Barlow, Arial, sans-serif`;fitText(x,String(v),cx+118*u,y,W-pd-(cx+118*u))});
+  x.fillStyle="#6f7d89";x.font=`500 ${13*u}px "IBM Plex Mono",Menlo,monospace`;
+  fitText(x,`REC ${r.id}  ·  PHOTO SHA-256 ${r.fingerprint}  ·  LOGGED BY ${r.loggedBy||"—"}  ·  STAMPED ${fmtDate(r.stampedAt)} ${fmtTime(r.stampedAt)}`+(r.notes?`  ·  ${r.notes}`:""),pd,H+P-30*u,W-2*pd);
+  return await new Promise(res=>c.toBlob(res,"image/jpeg",0.88));
+}
+
+/* ---------- offline queue (separate from the locomotive app) ---------- */
+let idbP=null;const memQ=new Map();
+function idb(){if(!idbP)idbP=new Promise((res,rej)=>{try{const q=indexedDB.open("gen-fuel",1);q.onupgradeneeded=()=>q.result.createObjectStore("q",{keyPath:"id"});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}}).catch(()=>null);return idbP}
+async function qOp(m,fn){const d=await idb();if(!d)return null;return new Promise((res,rej)=>{const t=d.transaction("q",m);const r=fn(t.objectStore("q"));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})}
+async function qPut(item){try{if(await idb()){await qOp("readwrite",s=>s.put(item));return true}}catch(e){}memQ.set(item.id,item);return false}
+async function qDel(id){memQ.delete(id);try{await qOp("readwrite",s=>s.delete(id))}catch(e){}}
+async function qAll(){let a=[];try{a=(await qOp("readonly",s=>s.getAll()))||[]}catch(e){}const ids=new Set(a.map(i=>i.id));memQ.forEach((v,k)=>{if(!ids.has(k))a.push(v)});return a}
+async function refreshPending(){pending=(await qAll()).map(i=>({...i.rec,queued:true}));$("qstatus").textContent=pending.length?`${pending.length} waiting to upload`:"";render()}
+async function upload(rec,blob){
+  const fd=new FormData();fd.append("meta",JSON.stringify(rec));fd.append("photo",blob,rec.id+".jpg");
+  const r=await api("/entries",{method:"POST",body:fd});
+  if(r.status===401){const e=new Error("pin");e.code="pin";throw e}
+  if(!r.ok){const e=new Error("server");e.code="server";throw e}
+}
+let flushing=false;
+async function flush(){
+  if(flushing||!navigator.onLine||!PIN)return;flushing=true;let any=false;
+  try{for(const it of await qAll()){try{await upload(it.rec,it.blob);await qDel(it.id);any=true}catch(e){break}}}
+  finally{flushing=false;await refreshPending();if(any)loadRegister()}
+}
+
+/* ---------- save entry ---------- */
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();if(busy)return;
+  const day=ensureDay();
+  if(!day){$("dayForm").hidden=false;$("daySum").hidden=true;return msg("Fill in today's details first (supplier and logged by), then tap Use these for today.","err")}
+  if(!photoFile)return msg("Take the photo first.","err");
+  const station=chipVal("station","stationOther");
+  if(!station)return msg("Choose the station.","err");
+  const litres=parseFloat(String(chipVal("litre","litres")).replace(/,/g,""));
+  if(!(litres>0))return msg("Enter the litres as a number, e.g. 500.","err");
+  const ageH=(Date.now()-(photoFile.lastModified||Date.now()))/36e5;
+  if(ageH>2&&!$("f").dataset.oldOk){$("f").dataset.oldOk="1";return msg(`This photo was taken ${fmtDate(photoFile.lastModified)} ${fmtTime(photoFile.lastModified)}, not just now. It will be marked "Old photo" in the register. Tap Stamp & save again to continue, or retake the photo.`,"err")}
+  delete $("f").dataset.oldOk;
+  busy=true;$("goBtn").disabled=true;msg("Stamping…");
+  try{
+    const captured=new Date(photoFile.lastModified||Date.now()),now=new Date(),l=lagos(captured);
+    const fp=await sha(await photoFile.arrayBuffer());
+    const id=`GF-${String(l.getFullYear()).slice(2)}${pad(l.getMonth()+1)}${pad(l.getDate())}-${pad(l.getHours())}${pad(l.getMinutes())}-${station.replace(/[^A-Za-z0-9]/g,"").slice(0,12)}-${Math.random().toString(36).slice(2,5).toUpperCase()}`;
+    const rec={id,station,generator:pick("gen")?chipVal("gen","genOther"):"",hourMeter:$("hourMeter").value.trim(),litres,supplier:supplierName(day),waybill:day.waybill,
+      loggedBy:day.loggedBy,stationReceiver:$("stationReceiver").value.trim(),witness:day.witness,notes:day.notes,capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
+    let blob;try{blob=await stamp(photoFile,rec)}catch(err){throw new Error("img")}
+    if(current)URL.revokeObjectURL(current.url);
+    current={blob,url:URL.createObjectURL(blob),rec};
+    $("preview").innerHTML=`<img src="${current.url}" alt="Stamped photo ${esc(id)}">`;
+    $("dlBtn").disabled=false;$("shareBtn").disabled=false;
+    msg("Saving…");
+    let saved=false,pinErr=false;
+    if(navigator.onLine){try{await upload(rec,blob);saved=true}catch(err){if(err.code==="pin")pinErr=true}}
+    if(pinErr){msg("The generator log PIN has changed. Sign out and sign in again with the new PIN.","err");return}
+    let durable=true;
+    if(!saved){durable=await qPut({id,rec,blob});await refreshPending()}
+    ls.set(K.station,station);
+    resetPhoto();$("hourMeter").value="";$("stationReceiver").value="";
+    document.querySelectorAll('input[name="gen"]').forEach(i=>i.checked=false);genWas="";$("genOther").hidden=true;$("genOther").value="";
+    if(saved)records.push(rec);
+    render();
+    const what=`${station} (${num(litres)} L)`;
+    if(saved)msg(`${what} saved.`,"ok");
+    else if(durable)msg(`No signal. ${what} is kept on this phone and uploads by itself when signal returns.`,"ok");
+    else msg("No connection and this phone can't store it offline. Tap Save to phone now; keep the app open and it will upload when signal returns.","err");
+    if(saved)loadRegister();
+  }catch(err){msg(err.message==="img"?"Could not read that photo. Retake it.":"Something went wrong. Try again.","err")}
+  finally{busy=false;$("goBtn").disabled=false}
+});
+
+$("dlBtn").addEventListener("click",()=>{
+  if(!current)return;
+  const a=document.createElement("a");a.href=current.url;a.download=current.rec.id+".jpg";document.body.appendChild(a);a.click();a.remove();
+  msg("Photo saved to the phone's downloads.","ok");
+});
+$("shareBtn").addEventListener("click",async()=>{
+  if(!current)return;
+  const file=new File([current.blob],current.rec.id+".jpg",{type:"image/jpeg"});
+  const r=current.rec;
+  const text=`Generator diesel · ${r.station} Station\n${num(r.litres)} L${r.generator?" · "+r.generator:""}${r.hourMeter?" · "+r.hourMeter+" h":""}\n${r.supplier} · Waybill ${r.waybill||"—"}\n${fmtDate(r.capturedAt)} ${fmtTime(r.capturedAt)}\nRef ${r.id}`;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text})}catch(e){if(e.name!=="AbortError")msg("Sharing failed. Use Save to phone, then send it from your gallery.","err")}
+  }else{$("dlBtn").click();msg("This phone can't share directly. The photo was saved; send it from your gallery.")}
+});
+
+/* ---------- register ---------- */
+function allRows(){return [...records,...pending.filter(p=>!records.some(r=>r.id===p.id))]}
+function todays(){const t=dayKey(Date.now());return allRows().filter(r=>dayKey(r.capturedAt)===t)}
+async function loadRegister(){
+  if(!PIN)return;
+  try{
+    const r=await api("/entries");
+    if(r.status===401){setStatus(false,"PIN changed — sign out and back in");return}
+    const offline=r.headers.get("x-offline")==="1";
+    records=await r.json();
+    setStatus(!offline&&navigator.onLine,offline||!navigator.onLine?"offline · showing last copy":"live");
+    render();
+  }catch(e){setStatus(false,"offline · saving on this phone")}
+}
+function visibleRows(){
+  const list=allRows();
+  const months=[...new Set(list.map(r=>monthKey(r.capturedAt)))].sort().reverse();
+  if(!months.length)months.push(monthKey(Date.now()));
+  const cur=months.includes($("month").value)?$("month").value:months[0];
+  return {months,cur,rows:list.filter(r=>monthKey(r.capturedAt)===cur).sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))};
+}
+function byStation(rows){const s={};rows.forEach(r=>{const x=s[r.station]||(s[r.station]={n:0,l:0,last:""});x.n++;x.l+=Number(r.litres||0);if(r.capturedAt>x.last)x.last=r.capturedAt});return s}
+function render(){
+  const tl=todays(),ts=byStation(tl);
+  document.querySelectorAll("[data-done]").forEach(el=>{const x=ts[el.dataset.done];el.textContent=x?`✓ ${x.n>1?x.n+"× · ":""}${num(x.l)} L`:""});
+  const tot=tl.reduce((a,r)=>a+Number(r.litres||0),0),ns=Object.keys(ts).length;
+  $("todayTxt").textContent=tl.length?`${ns} of ${STATIONS.length} stations · ${tl.length} fill${tl.length===1?"":"s"} · ${num(tot)} L`:"nothing logged yet";
+  const {months,cur,rows}=visibleRows();
+  $("month").innerHTML=months.map(m=>{const [y,mo]=m.split("-");return `<option value="${m}" ${m===cur?"selected":""}>${new Date(y,mo-1).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</option>`}).join("");
+  const ms=byStation(rows);
+  const order=[...STATIONS,...Object.keys(ms).filter(k=>!STATIONS.includes(k)).sort()];
+  const T={n:0,l:0};Object.values(ms).forEach(x=>{T.n+=x.n;T.l+=x.l});
+  $("sumTable").innerHTML=`<thead><tr><th>Station</th><th class="num">Fills</th><th class="num">Litres</th><th>Last fill</th></tr></thead><tbody>`+
+    order.filter(k=>STATIONS.includes(k)||ms[k]).map(k=>{const x=ms[k];return x?`<tr><td><b>${esc(k)}</b></td><td class="num">${x.n}</td><td class="num">${num(x.l)}</td><td>${fmtDate(x.last)}</td></tr>`:`<tr><td>${esc(k)}</td><td class="num">0</td><td class="num">—</td><td style="color:var(--muted)">No fill this month</td></tr>`}).join("")+
+    `<tr class="total"><td>Total</td><td class="num">${T.n}</td><td class="num">${num(T.l)}</td><td></td></tr></tbody>`;
+  $("rows").innerHTML=rows.length?rows.map(r=>{
+    const src=r.queued?"":`${API}/photo/${encodeURIComponent(r.id)}?pin=${encodeURIComponent(PIN)}`;
+    const img=src?`<img src="${esc(src)}" alt="Photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
+    const lagH=(new Date(r.stampedAt||r.capturedAt)-new Date(r.capturedAt))/36e5;
+    const q=(r.queued?'<span class="tag q">Waiting to upload</span>':"")+(lagH>2?`<span class="tag ex">Old photo · ${lagH>=48?Math.round(lagH/24)+" days":Math.round(lagH)+" h"}</span>`:"");
+    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td><span class="loco">${esc(r.station)}</span>${q}</td><td class="num">${num(r.litres)}</td><td>${esc(r.generator||"—")}<br><span style="color:var(--muted)">${r.hourMeter?esc(r.hourMeter)+" h":"—"}</span></td><td>${esc(r.supplier)}<br><span style="color:var(--muted)">${esc(r.waybill||"—")}</span></td><td>${esc(r.loggedBy||"—")}<br><span style="color:var(--muted)">${esc(r.stationReceiver||"—")} · ${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
+  }).join(""):`<tr><td colspan="8" class="empty">Nothing recorded this month. Entries appear here as soon as they are saved.</td></tr>`;
+}
+$("month").addEventListener("change",render);
+$("rows").addEventListener("click",e=>{const z=e.target.dataset&&e.target.dataset.zoom;if(z){$("zoomImg").src=z;$("zoom").showModal()}});
+$("zoomClose").addEventListener("click",()=>$("zoom").close());
+$("zoom").addEventListener("click",e=>{if(e.target===$("zoom"))$("zoom").close()});
+$("csvBtn").addEventListener("click",()=>{
+  const {rows,cur}=visibleRows();
+  const head=["Record ID","Date","Time (WAT)","Station","Litres","Generator","Hour meter","Supplier","Waybill","Logged by","Received at station by","Witnessed by","Remarks","Photo fingerprint","Status"];
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station,r.litres,r.generator,r.hourMeter,r.supplier,r.waybill,r.loggedBy,r.stationReceiver,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
+  const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`generator-fuel-register-${cur}.csv`;document.body.appendChild(a);a.click();a.remove();
+});
+
+/* ---------- install prompt ---------- */
+let deferred=null;
+const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;if(!standalone){$("installTip").hidden=false;$("installBtn").hidden=false}});
+$("installBtn").addEventListener("click",async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$("installTip").hidden=true});
+if(!standalone&&/iphone|ipad/i.test(navigator.userAgent)){$("installTip").hidden=false;$("installTxt").textContent="To install: tap the Share icon in Safari, then “Add to Home Screen”."}
+
+/* ---------- start ---------- */
+function start(){
+  PIN=ls.get(K.pin,"");
+  if(!PIN){$("gate").hidden=false;$("app").hidden=true;$("gName").value=ls.get(K.name,"");return}
+  $("gate").hidden=true;$("app").hidden=false;
+  fillDayForm();renderDay();
+  const last=ls.get(K.station,"");if(last&&!setChip("station",last)){}
+  render();refreshPending();loadRegister();flush();
+}
+window.addEventListener("online",()=>{setStatus(true,"back online · syncing");flush();loadRegister()});
+window.addEventListener("offline",()=>setStatus(false,"offline · saving on this phone"));
+setInterval(flush,30000);
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});
+start();
+</script>
+</body>
+</html>
