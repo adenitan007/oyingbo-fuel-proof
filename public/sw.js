@@ -1,5 +1,5 @@
 // Offline support: app shell cached on first visit; register list falls back to last copy; photos cached once seen.
-const SHELL = "fuel-shell-v6";
+const SHELL = "fuel-shell-v7";
 const DATA = "fuel-data-v4";
 const SHELL_FILES = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/generator/", "/generator/manifest.webmanifest", "/generator/icon-192.png", "/generator/icon-512.png"];
 

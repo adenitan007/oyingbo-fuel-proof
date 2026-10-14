@@ -261,7 +261,7 @@ button.primary{background:var(--gen);border-color:var(--gen);color:var(--gen-ink
 
 <script>
 const STATIONS=["Iju","Agege","Oyingbo","Mushin","Yaba","Ikeja","Oshodi"];
-const SUPPLIERS=["HIRCON ENGINEERING","STRONG TOWER"];
+const SUPPLIERS=["DAVID SENETOR","HIRCON ENGINEERING","STRONG TOWER"];
 const LITRES=["500","1000"];
 const GENS=["550 kVA","1100 kVA"];
 const API="/api/gen";
@@ -329,7 +329,7 @@ $("tabReg").addEventListener("click",()=>tab("reg"));
 chips("stations","station",STATIONS,v=>`${esc(v)}<span class="done" data-done="${esc(v)}"></span>`);
 chips("litreChips","litre",LITRES,v=>v==="Other"?"Other":num(v)+" L");
 chips("gens","gen",GENS);
-chips("suppliers","supplier",SUPPLIERS,v=>v==="HIRCON ENGINEERING"?"HIRCON":esc(v));
+chips("suppliers","supplier",SUPPLIERS,v=>v==="HIRCON ENGINEERING"?"HIRCON":v==="STRONG TOWER"?"STRONG T.":esc(v));
 bindOther("stations","station","stationOther");bindOther("litreChips","litre","litres");
 bindOther("gens","gen","genOther");bindOther("suppliers","supplier","supplierOther");
 setChip("litre",LITRES[0]);
