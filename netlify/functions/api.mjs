@@ -58,16 +58,19 @@ export default async (req, context) => {
     if (!photo || typeof photo.arrayBuffer !== "function") return json({ error: "no_photo" }, 400);
     if (photo.size > MAX_PHOTO) return json({ error: "photo_too_large" }, 413);
     if (!(String(meta.stampedAt || "") >= REGISTER_START)) return json({ ok: true, discarded: "before_register_start" });
-    const litres = Number(meta.litres);
-    if (!(litres > 0 && litres < 100000)) return json({ error: "bad_litres" }, 400);
-
     const type = meta.type === "decant" ? "decant" : "delivery";
+    const stage = type === "delivery" && meta.stage === "start" ? "start" : "";
+    const litres = Number(meta.litres);
+    if (stage === "start" ? litres !== 0 : !(litres > 0 && litres < 100000)) return json({ error: "bad_litres" }, 400);
     const fromLoco = type === "decant" ? clean(meta.fromLoco, 20) : "";
     if (type === "decant" && (!fromLoco || fromLoco === clean(meta.loco, 20))) return json({ error: "bad_decant" }, 400);
     const rec = {
       id,
       type,
       fromLoco,
+      stage,
+      truckMeter: clean(meta.truckMeter, 20),
+      locoMeter: clean(meta.locoMeter, 20),
       loco: clean(meta.loco, 20),
       litres,
       supplier: clean(meta.supplier),

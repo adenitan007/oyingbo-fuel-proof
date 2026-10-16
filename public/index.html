@@ -231,6 +231,10 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
           <input id="litres" inputmode="decimal" placeholder="Litres" hidden>
         </div>
 
+        <div class="row" id="meterBox">
+          <label class="field"><span class="lbl">Truck meter <span class="hint">(optional)</span></span><input id="truckMeter" inputmode="decimal" placeholder="Reading on truck meter"></label>
+          <label class="field"><span class="lbl">Loco gauge <span class="hint">(optional)</span></span><input id="locoMeter" inputmode="decimal" placeholder="Reading on train gauge"></label>
+        </div>
         <label class="field" id="decNoteBox" hidden><span class="lbl">Reason for decant <span class="hint">(optional)</span></span><input id="decNote" placeholder="e.g. 43040 low before service"></label>
 
         <div class="btns"><button type="submit" class="primary" id="goBtn">Stamp &amp; save</button></div>
@@ -270,7 +274,7 @@ html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 const STATION="Oyingbo Station";
 const LOCOS=["43010","43040","43184","43304"];
 const SUPPLIERS=["HIRCON ENGINEERING","STRONG TOWER"];
-const DEL_LITRES=["3750","5000"], DEC_LITRES=["500","1000"];
+const DEL_LITRES=["0","3750","5000"], DEC_LITRES=["500","1000"];
 const $=id=>document.getElementById(id);
 let records=[], pending=[], current=null, photoFile=null, busy=false, PIN="", mode="delivery";
 
@@ -286,6 +290,8 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const pick=name=>{const r=document.querySelector(`input[name="${name}"]:checked`);return r?r.value:""};
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const isDec=r=>r.type==="decant";
+const isStart=r=>r.stage==="start";
+const litreLabel=v=>v==="Other"?"Other":v==="0"?"00 · Start":num(v)+" L";
 function msg(t,cls){$("msg").textContent=t;$("msg").className="msg "+(cls||"")}
 function chips(el,name,vals,labelFn){$(el).innerHTML=[...vals,"Other"].map(v=>`<label><input type="radio" name="${name}" value="${esc(v)}"><span>${labelFn?labelFn(v):esc(v)}</span></label>`).join("")}
 function setChip(name,v){const r=[...document.querySelectorAll(`input[name="${name}"]`)].find(i=>i.value===v);if(r){r.checked=true;return true}return false}
@@ -334,8 +340,9 @@ function setMode(m){
   mode=m;const dec=m==="decant";
   $("modeDel").setAttribute("aria-pressed",String(!dec));$("modeDec").setAttribute("aria-pressed",String(dec));
   $("delFields").hidden=dec;$("decFields").hidden=!dec;$("decNoteBox").hidden=!dec;
-  chips("litreChips","litre",dec?DEC_LITRES:DEL_LITRES,v=>v==="Other"?"Other":num(v)+" L");
-  setChip("litre",dec?DEC_LITRES[0]:DEL_LITRES[0]);$("litres").hidden=true;$("litres").value="";
+  chips("litreChips","litre",dec?DEC_LITRES:DEL_LITRES,litreLabel);
+  setChip("litre",dec?DEC_LITRES[0]:DEL_LITRES[1]);
+  $("meterBox").hidden=dec;$("litres").hidden=true;$("litres").value="";
   $("shotTxt").textContent=photoFile?$("shotTxt").textContent:(dec?"Opens the camera. Get both locomotives or the transfer meter in frame.":"Opens the camera. Get the loco number and the meter reading in frame.");
   $("goBtn").textContent=dec?"Stamp & save decant":"Stamp & save";
   msg("");
@@ -403,7 +410,7 @@ async function stamp(file,r){
   try{await document.fonts.ready}catch(e){}
   const img=await loadImg(file);
   const s=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
-  const W=Math.round(img.naturalWidth*s),H=Math.round(img.naturalHeight*s),u=W/1000,P=Math.round(310*u);
+  const W=Math.round(img.naturalWidth*s),H=Math.round(img.naturalHeight*s),u=W/1000,P=Math.round(((r.truckMeter?1:0)+(r.locoMeter?1:0)>0?310+34*((r.truckMeter?1:0)+(r.locoMeter?1:0)):310)*u);
   const c=document.createElement("canvas");c.width=W;c.height=H+P;const x=c.getContext("2d");
   x.drawImage(img,0,0,W,H);
   x.fillStyle="#101820";x.fillRect(0,H,W,P);
@@ -414,11 +421,13 @@ async function stamp(file,r){
   fitText(x,"LAMATA · LRMT RED LINE · "+STATION.toUpperCase()+(dec?" · DIESEL DECANT PROOF":" · DIESEL DELIVERY PROOF"),pd,top+18*u,W-2*pd);
   const FAM='"Barlow Condensed","Arial Narrow",Arial,sans-serif', colW=W*0.50-pd;
   x.fillStyle="#ffffff";fitBig(x,dec?`${r.fromLoco} → ${r.loco}`:"LOCO "+r.loco,pd,top+48*u,colW,(dec?80:92)*u,700,FAM);
-  x.fillStyle=dec?"#8fb6d6":"#f0a52a";fitBig(x,num(r.litres)+(dec?" L DECANTED":" LITRES"),pd,top+150*u,colW,64*u,700,FAM);
+  x.fillStyle=dec?"#8fb6d6":"#f0a52a";fitBig(x,isStart(r)?"00 · START READING":num(r.litres)+(dec?" L DECANTED":" LITRES"),pd,top+150*u,colW,64*u,700,FAM);
   const cx=W*0.54;
   const lines=dec
     ?[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["FROM",r.fromLoco],["TO",r.loco],["DONE BY",r.receivedBy||"—"],["WITNESS",r.witness||"—"]]
     :[["DATE",fmtDate(r.capturedAt)],["TIME",fmtTime(r.capturedAt)+" WAT"],["STATION",STATION],["SUPPLIER",r.supplier],["WAYBILL",r.waybill||"—"],["RECEIVED",r.receivedBy||"—"],["WITNESS",r.witness||"—"]];
+  if(r.truckMeter)lines.push(["TRUCK MTR",r.truckMeter]);
+  if(r.locoMeter)lines.push(["LOCO GAUGE",r.locoMeter]);
   const step=(P-80*u)/lines.length;
   lines.forEach(([k,v],i)=>{const y=top+40*u+i*step;
     x.fillStyle="#93a1ad";x.font=`500 ${14*u}px "IBM Plex Mono",Menlo,monospace`;x.fillText(k,cx,y+5*u);
@@ -466,7 +475,8 @@ $("f").addEventListener("submit",async e=>{
     if(!loco)return msg("Choose the locomotive.","err");
   }
   const litres=parseFloat(String(chipVal("litre","litres")).replace(/,/g,""));
-  if(!(litres>0))return msg("Enter the litres as a number, e.g. "+(dec?"500":"3750")+".","err");
+  const start=!dec&&litres===0;
+  if(!(litres>0)&&!start)return msg("Enter the litres as a number, e.g. "+(dec?"500":"3750")+".","err");
   const ageH=(Date.now()-(photoFile.lastModified||Date.now()))/36e5;
   if(ageH>2&&!$("f").dataset.oldOk){$("f").dataset.oldOk="1";return msg(`This photo was taken ${fmtDate(photoFile.lastModified)} ${fmtTime(photoFile.lastModified)}, not just now. It will be marked "Old photo" in the register. Tap Stamp & save again to continue, or retake the photo.`,"err")}
   delete $("f").dataset.oldOk;
@@ -478,7 +488,7 @@ $("f").addEventListener("submit",async e=>{
     const id=`FD-${String(l.getFullYear()).slice(2)}${pad(l.getMonth()+1)}${pad(l.getDate())}-${pad(l.getHours())}${pad(l.getMinutes())}-${tag}-${Math.random().toString(36).slice(2,5).toUpperCase()}`;
     const notes=dec?[$("decNote").value.trim(),day.notes].filter(Boolean).join(" · "):day.notes;
     const rec={id,type:dec?"decant":"delivery",loco,fromLoco:dec?fromLoco:"",supplier:dec?"":supplierName(day),litres,station:STATION,
-      waybill:dec?"":day.waybill,receivedBy:day.receivedBy,witness:day.witness,notes,capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
+      waybill:dec?"":day.waybill,stage:start?"start":"",truckMeter:dec?"":$("truckMeter").value.trim(),locoMeter:dec?"":$("locoMeter").value.trim(),receivedBy:day.receivedBy,witness:day.witness,notes,capturedAt:captured.toISOString(),stampedAt:now.toISOString(),fingerprint:fp};
     let blob;try{blob=await stamp(photoFile,rec)}catch(err){throw new Error("img")}
     if(current)URL.revokeObjectURL(current.url);
     current={blob,url:URL.createObjectURL(blob),rec};
@@ -490,10 +500,11 @@ $("f").addEventListener("submit",async e=>{
     if(pinErr){msg("The station PIN has changed. Sign out and sign in again with the new PIN.","err");return}
     let durable=true;
     if(!saved){durable=await qPut({id,rec,blob});await refreshPending()}
-    resetPhoto();$("decNote").value="";
+    resetPhoto();$("decNote").value="";$("truckMeter").value="";$("locoMeter").value="";
+    if(start)setChip("litre",DEL_LITRES[1]);
     if(saved)records.push(rec);
     render();
-    const what=dec?`Decant ${fromLoco} → ${loco} (${num(litres)} L)`:`${loco} (${num(litres)} L)`;
+    const what=dec?`Decant ${fromLoco} → ${loco} (${num(litres)} L)`:start?`${loco} 00 start reading`:`${loco} (${num(litres)} L)`;
     if(saved)msg(`${what} saved.`,"ok");
     else if(durable)msg(`No signal. ${what} is kept on this phone and uploads by itself when signal returns.`,"ok");
     else msg("No connection and this phone can't store it offline. Tap Save to gallery now; keep the app open and it will upload when signal returns.","err");
@@ -555,14 +566,14 @@ function visibleRows(){
 }
 function summarise(rows){
   const s={};const g=l=>s[l]||(s[l]={del:0,nDel:0,in:0,out:0});
-  rows.forEach(r=>{const L=Number(r.litres||0);if(isDec(r)){g(r.fromLoco).out+=L;g(r.loco).in+=L}else{const x=g(r.loco);x.del+=L;x.nDel++}});
+  rows.forEach(r=>{if(isStart(r))return;const L=Number(r.litres||0);if(isDec(r)){g(r.fromLoco).out+=L;g(r.loco).in+=L}else{const x=g(r.loco);x.del+=L;x.nDel++}});
   return s;
 }
 function render(){
   // today strip + chip badges
   const tl=todays(),sm=summarise(tl);
   document.querySelectorAll("[data-done]").forEach(el=>{const x=sm[el.dataset.done];el.textContent=x&&x.nDel?`✓ ${x.nDel>1?x.nDel+"× · ":""}${num(x.del)} L`:""});
-  const nDel=tl.filter(r=>!isDec(r)).length,nDec=tl.filter(isDec).length;
+  const nDel=tl.filter(r=>!isDec(r)&&!isStart(r)).length,nDec=tl.filter(isDec).length;
   const totDel=tl.filter(r=>!isDec(r)).reduce((a,r)=>a+Number(r.litres||0),0);
   $("todayTxt").textContent=tl.length?`${nDel} deliver${nDel===1?"y":"ies"} · ${num(totDel)} L`+(nDec?` · ${nDec} decant${nDec===1?"":"s"}`:""):"nothing logged yet";
   // register
@@ -578,10 +589,11 @@ function render(){
     const img=src?`<img src="${esc(src)}" alt="Photo ${esc(r.id)}" data-zoom="${esc(src)}" loading="lazy">`:`<div class="thumb0"></div>`;
     const lagH=(new Date(r.stampedAt||r.capturedAt)-new Date(r.capturedAt))/36e5;
     const q=(r.queued?'<span class="tag q">Waiting to upload</span>':"")+(lagH>2?`<span class="tag ex" title="Photo was taken ${fmtDate(r.capturedAt)}, stamped ${fmtDate(r.stampedAt)}">Old photo · ${lagH>=48?Math.round(lagH/24)+" days":Math.round(lagH)+" h"}</span>`:"");
-    const type=isDec(r)?'<span class="type dec">Decant</span>':'<span class="type del">Delivery</span>';
+    const type=isDec(r)?'<span class="type dec">Decant</span>':isStart(r)?'<span class="type del" style="opacity:.7">00 Start</span>':'<span class="type del">Delivery</span>';
+    const meters=(r.truckMeter||r.locoMeter)?`<br><span style="font:12px var(--mono);color:var(--muted)">${r.truckMeter?"Truck "+esc(r.truckMeter):""}${r.truckMeter&&r.locoMeter?" · ":""}${r.locoMeter?"Loco "+esc(r.locoMeter):""}</span>`:"";
     const loco=isDec(r)?`<span class="loco">${esc(r.fromLoco)} → ${esc(r.loco)}</span>`:`<span class="loco">${esc(r.loco)}</span>`;
     const sup=isDec(r)?`<span style="color:var(--muted)">${esc(r.notes||"—")}</span>`:`${esc(r.supplier)}<br><span style="color:var(--muted)">${esc(r.waybill||"—")}</span>`;
-    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td>${type}${q}</td><td>${loco}</td><td class="num">${num(r.litres)}</td><td>${sup}</td><td>${esc(r.receivedBy||"—")}<br><span style="color:var(--muted)">${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
+    return `<tr><td>${img}</td><td>${fmtDate(r.capturedAt)}<br><span style="font:12px var(--mono);color:var(--muted)">${fmtTime(r.capturedAt)}</span></td><td>${type}${q}</td><td>${loco}</td><td class="num">${isStart(r)?"00":num(r.litres)}${meters}</td><td>${sup}</td><td>${esc(r.receivedBy||"—")}<br><span style="color:var(--muted)">${esc(r.witness||"—")}</span></td><td class="mono">${esc(r.id)}<br>${esc(r.fingerprint)}</td></tr>`;
   }).join(""):`<tr><td colspan="8" class="empty">Nothing recorded this month. Entries appear here as soon as they are saved.</td></tr>`;
 }
 $("month").addEventListener("change",render);
@@ -590,9 +602,9 @@ $("zoomClose").addEventListener("click",()=>$("zoom").close());
 $("zoom").addEventListener("click",e=>{if(e.target===$("zoom"))$("zoom").close()});
 $("csvBtn").addEventListener("click",()=>{
   const {rows,cur}=visibleRows();
-  const head=["Record ID","Type","Date","Time (WAT)","Station","Locomotive (receiving)","From locomotive (decant)","Litres","Supplier","Waybill","Received / done by","Witnessed by","Remarks","Photo fingerprint","Status"];
+  const head=["Record ID","Type","Date","Time (WAT)","Station","Locomotive (receiving)","From locomotive (decant)","Litres","Truck meter","Loco gauge","Supplier","Waybill","Received / done by","Witnessed by","Remarks","Photo fingerprint","Status"];
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,isDec(r)?"Decant":"Delivery",fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station||STATION,r.loco,r.fromLoco||"",r.litres,r.supplier||"",r.waybill||"",r.receivedBy,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
+  const lines=[head.map(q).join(","),...rows.slice().reverse().map(r=>[r.id,isDec(r)?"Decant":isStart(r)?"00 start reading":"Delivery",fmtDate(r.capturedAt),fmtTime(r.capturedAt),r.station||STATION,r.loco,r.fromLoco||"",r.litres,r.truckMeter||"",r.locoMeter||"",r.supplier||"",r.waybill||"",r.receivedBy,r.witness,r.notes,r.fingerprint,r.queued?"Waiting to upload":"Saved"].map(q).join(","))];
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`oyingbo-fuel-register-${cur}.csv`;document.body.appendChild(a);a.click();a.remove();
 });
